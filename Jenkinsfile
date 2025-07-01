@@ -10,9 +10,10 @@ pipeline {
         }
 
       stage('SonarQube Analysis') {
-          def mvn = tool 'Default Maven';
+          steps{
           withSonarQubeEnv() {
             sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=numeric-application"
+          }
           }
         }
     }
