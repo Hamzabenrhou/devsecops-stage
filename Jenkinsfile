@@ -8,22 +8,14 @@ pipeline {
               archive 'target/*.jar'
             }
         }
-      stage('SCM') {
+      stage('SonarQube-SAST') {
                   steps {
-                      checkout scm
+                    sh "mvn clean verify sonar:sonar \
+                          -Dsonar.projectKey=numeric-application \
+                          -Dsonar.host.url=http://devsecops.westeurope.cloudapp.azure.com:30381 \
+                          -Dsonar.login=sqp_3f1ec8d71ce5904e7d6ccd3514e71a3d60cfb7b0"
+
                   }
               }
-              stage('SonarQube Analysis') {
-                  steps {
-                      withSonarQubeEnv('SonarQube') { // Matches the SonarQube server name in Jenkins config
-                          withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                              sh '''
-                              mvn clean verify sonar:sonar \
-                                  -Dsonar.projectKey=numeric-application \
-                                  -Dsonar.host.url=http://devsecops.westeurope.cloudapp.azure.com:30381 \
-                                  -Dsonar.login=$SONAR_TOKEN
-                              '''
-                          }
-                      }
     }
 }
