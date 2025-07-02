@@ -25,18 +25,18 @@ pipeline {
                   }
               }
               }
-      stage('Dependency-check') {
-                  steps {
-                    sh "mvn dependency-check:check"
-                    }
-                  post{
-                    always{
-                        dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                    }
-
-
-
-                  }
-              }
+//       stage('Dependency-check') {
+//                   steps {
+//                     sh "mvn dependency-check:check"
+//                     }
+//                   post{
+//                     always{
+//                         dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+//                     }
+//
+//
+//
+//                   }
+//               }
     }
 }
