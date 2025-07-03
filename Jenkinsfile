@@ -25,18 +25,22 @@ pipeline {
                   }
               }
               }
-//       stage('Dependency-check') {
-//                   steps {
-//                     sh "mvn dependency-check:check"
-//                     }
-//                   post{
-//                     always{
-//                         dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-//                     }
-//
-//
-//
-//                   }
-//               }
+       stage('vulnerability scan - Docker') {
+                parallel{
+                  "Dependency-check":{
+
+                     sh "mvn dependency-check:check"
+                     },
+                   "Trivy Scan":{
+                        sh "bash trivy-docker-image-scan.sh"
+                   }
+
+
+
+
+                   }
+               }
+               }
+
     }
 }
