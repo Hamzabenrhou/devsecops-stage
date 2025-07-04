@@ -62,22 +62,22 @@ pipeline {
                        sh 'docker push docker-registry:5000/java-app:latest'
                      }
                   }
-             stage('Kubernetes Deployment - DEV') {
-                   steps {
-                       sh "sed -i 's#REPLACE_ME#docker-registry:5000/java-app:latest#g' k8s_deployment_service.yaml"
-                       sh "kubectl apply -f k8s_deployment_service.yaml"
-                     }
-                   }
-
-
-               }
-
-               post {
-                 always {
-                   pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
-                   dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                 }
-
+//              stage('Kubernetes Deployment - DEV') {
+//                    steps {
+//                        sh "sed -i 's#REPLACE_ME#docker-registry:5000/java-app:latest#g' k8s_deployment_service.yaml"
+//                        sh "kubectl apply -f k8s_deployment_service.yaml"
+//                      }
+//                    }
+//
+//
+//                }
+//
+//                post {
+//                  always {
+//                    pitmutation mutationStatsFile: '**/target/pit-reports/**/mutations.xml'
+//                    dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+//                  }
+//
                }
 
              }
