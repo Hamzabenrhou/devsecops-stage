@@ -58,10 +58,10 @@ pipeline {
                     }
              stage('Docker Build and Push') {
                    steps {
-                       withDockerRegistry([credentialsId: "docker-hub", url: ""])
-                       sh 'printenv'
-                       sh 'sudo docker build -t ham02br26/numeric-app:""$GIT_COMMIT"'
-                       sh 'docker push ham02br26/numeric-app:""$GIT_COMMIT""'
+                       withDockerRegistry(credentialsId: 'docker-hub', url: 'https://index.docker.io/v1/') {
+                                           sh 'printenv' // Keep for debugging
+                                           sh "docker build -t ${DOCKER_IMAGE} ."
+                                           sh "docker push ${DOCKER_IMAGE}"
                      }
                   }
 //              stage('Kubernetes Deployment - DEV') {
