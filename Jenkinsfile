@@ -63,6 +63,7 @@ pipeline {
                                            sh "docker build -t ${DOCKER_IMAGE} ."
                                            sh "docker push ${DOCKER_IMAGE}"
                      }
+                     }
                   }
 //              stage('Kubernetes Deployment - DEV') {
 //                    steps {
