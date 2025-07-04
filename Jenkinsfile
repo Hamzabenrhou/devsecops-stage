@@ -3,6 +3,7 @@ pipeline {
 
   environment {
              DOCKER_IMAGE = "ham02br26/numeric-app:${GIT_COMMIT}" // Replace 'yourusername' with your Docker Hub username
+             
          }
   stages {
       stage('Build Artifact') {
