@@ -60,8 +60,8 @@ pipeline {
                    steps {
                        withDockerRegistry([credentialsId: "docker-hub", url: ""])
                        sh 'printenv'
-                       sh 'sudo docker build -t Hamzabenrhou/numeric-app:""$GIT_COMMIT"'
-                       sh 'docker push Hamzabenrhou/numeric-app:""$GIT_COMMIT""'
+                       sh 'sudo docker build -t ham02br26/numeric-app:""$GIT_COMMIT"'
+                       sh 'docker push ham02br26/numeric-app:""$GIT_COMMIT""'
                      }
                   }
 //              stage('Kubernetes Deployment - DEV') {
