@@ -8,7 +8,12 @@
 		<version>2.2.1.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
+	</repositories>
 	<groupId>com.devsecops</groupId>
 	<artifactId>numeric</artifactId>
 	<version>0.0.1</version>
@@ -45,7 +50,61 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-<!--			<plugin>-->
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.5</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>test</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>1.15.8</version> <!-- Latest stable version -->
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>1.2.3</version> <!-- Latest version, compatible with JUnit 5.5.0 to 5.10.0 -->
+					</dependency>
+				</dependencies>
+				<configuration>
+					<mutationThreshold>75</mutationThreshold>
+					<outputFormats>
+						<outputFormat>XML</outputFormat>
+						<outputFormat>HTML</outputFormat>
+					</outputFormats>
+				</configuration>
+			</plugin>
+			<!--                   Dependency Check Plugin                   -->
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>6.1.6</version>
+				<configuration>
+					<format>ALL</format>
+					<failBuildOnCVSS>12</failBuildOnCVSS>
+
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
+
+		<!--			<plugin>-->
 <!--				<groupId>org.owasp</groupId>-->
 <!--				<artifactId>dependency-check-maven</artifactId>-->
 <!--				<version>10.0.4</version> &lt;!&ndash; Use the latest version &ndash;&gt;-->
@@ -57,8 +116,3 @@
 <!--					</execution>-->
 <!--				</executions>-->
 <!--			</plugin>-->
-			
-		</plugins>
-	</build>
-
-</project>

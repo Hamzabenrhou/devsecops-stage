@@ -8,6 +8,18 @@ pipeline {
               archive 'target/*.jar'
             }
         }
+          stage('Unit Tests - JUnit and JaCoCo') {
+              steps {
+                sh "mvn test"
+              }
+            }
+
+            stage('Mutation Tests - PIT') {
+              steps {
+                sh "mvn org.pitest:pitest-maven:mutationCoverage"
+              }
+            }
+
       stage('SonarQube-SAST') {
                   steps {
                     withSonarQubeEnv('SonarQube'){
