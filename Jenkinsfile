@@ -60,8 +60,8 @@ pipeline {
                    steps {
                        withDockerRegistry(credentialsId: 'docker-hub', url: 'https://index.docker.io/v1/') {
                                            sh 'printenv' // Keep for debugging
-                                           sh "docker build -t ${DOCKER_IMAGE} ."
-                                           sh "docker push ${DOCKER_IMAGE}"
+                                           sh "docker build -t ham02br26 ."
+                                           sh "docker push ham02br26"
                      }
                      }
                   }
