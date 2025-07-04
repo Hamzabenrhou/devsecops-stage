@@ -58,8 +58,10 @@ pipeline {
                     }
              stage('Docker Build and Push') {
                    steps {
-                       sh 'sudo docker build -t docker-registry:5000/java-app:latest .'
-                       sh 'docker push docker-registry:5000/java-app:latest'
+                       withDockerRegistry([credentialsId: "docker-hub", url: ""])
+                       sh 'printenv'
+                       sh 'sudo docker build -t Hamzabenrhou/numeric-app:""$GIT_COMMIT"'
+                       sh 'docker push Hamzabenrhou/numeric-app:""$GIT_COMMIT""'
                      }
                   }
 //              stage('Kubernetes Deployment - DEV') {
