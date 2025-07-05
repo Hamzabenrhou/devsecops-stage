@@ -1,10 +1,7 @@
 pipeline {
   agent any
 
-  environment {
-             DOCKER_IMAGE = "ham02br26/numeric-app:${GIT_COMMIT}" // Replace 'yourusername' with your Docker Hub username
-             
-         }
+
   stages {
       stage('Build Artifact') {
             steps {
@@ -62,10 +59,10 @@ pipeline {
                     }
              stage('Docker Build and Push') {
                    steps {
-                       withDockerRegistry(credentialsId: 'docker-hub', url: 'https://index.docker.io/v1/') {
+                       withDockerRegistry(credentialsId: 'docker-hub', url: '') {
                                            sh 'printenv' // For debugging
-                                           sh "docker build -t ${DOCKER_IMAGE} ."
-                                           sh "docker push ${DOCKER_IMAGE}"
+                                           sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
+                                           sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
                      }
                      }
                   }
