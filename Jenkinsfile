@@ -89,7 +89,7 @@ pipeline {
              stage('Check Rollout Status') {
                          steps {
                              withKubeConfig([credentialsId: 'kubeconfig']) {
-                                 sh "kubectl rollout status deployment/numeric-app"
+                                 sh "kubectl rollout status deployment/devsecops"
                              }
                          }
                      }
