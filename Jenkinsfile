@@ -40,37 +40,18 @@ pipeline {
                   }
               }
               }
-              stage('Dependency Check') {
-                          steps {
-                              steps {
-                                              withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                                                  docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
-                                                      sh '''
-                                                      docker run --rm -v $(pwd):/src \
-                                                          -e NVD_API_KEY=$NVD_API_KEY \
-                                                          owasp/dependency-check \
-                                                          --scan /src \
-                                                          --format HTML \
-                                                          --out /src/dependency-check-report.html \
-                                                          --failOnCVSS 7
-                                                      '''
-                                                      archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
-                                                  }}}
-                          }
-                      }
-//       stage('Dependency-check') {
-//                   steps {
-//                     sh "mvn dependency-check:check"
-//                     }
-//                   post{
-//                     always{
-//                         dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-//                     }
-//
-//
-//
-//                   }
-//               }
+  stage('Dependency Check') {
+              steps {
+                  withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                      sh "mvn dependency-check:check -DnvdApiKey=\${NVD_API_KEY}"
+                  }
+              }
+              post {
+                  always {
+                      dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                  }
+              }
+          }
              stage('Trivy scan') {
                         steps {
                           sh "bash trivy-docker-image.sh"
