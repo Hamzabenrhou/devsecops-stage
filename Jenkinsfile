@@ -1,6 +1,8 @@
 pipeline {
   agent any
-
+  environment{
+        imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
+  }
 
   stages {
       stage('Build Artifact') {
@@ -84,6 +86,12 @@ pipeline {
 
                                                   }
                                               }
+              stage('Trivy scan k8s') {
+                                     steps {
+                                       sh "bash trivy-k8s.sh"
+
+                                     }
+                                 }
              stage('Kubernetes Deployment - DEV') {
                    steps {
                        withKubeConfig([credentialsId: 'kubeconfig']){
