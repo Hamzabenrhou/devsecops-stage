@@ -40,6 +40,23 @@ pipeline {
                   }
               }
               }
+              stage('Dependency Check') {
+                          steps {
+                              script {
+                                  // Run OWASP Dependency-Check using Docker
+                                  sh '''
+                                  docker run --rm -v $(pwd):/src \
+                                      owasp/dependency-check \
+                                      --scan /src \
+                                      --format HTML \
+                                      --out /src/dependency-check-report.html \
+                                      --failOnCVSS 7
+                                  '''
+                                  // Archive the report for Jenkins
+                                  archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
+                              }
+                          }
+                      }
 //       stage('Dependency-check') {
 //                   steps {
 //                     sh "mvn dependency-check:check"
