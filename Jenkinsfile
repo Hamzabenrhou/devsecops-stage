@@ -55,7 +55,7 @@ pipeline {
                                                           --failOnCVSS 7
                                                       '''
                                                       archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
-                                                  }
+                                                  }}}
                           }
                       }
 //       stage('Dependency-check') {
