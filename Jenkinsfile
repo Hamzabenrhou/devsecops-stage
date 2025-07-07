@@ -42,19 +42,20 @@ pipeline {
               }
               stage('Dependency Check') {
                           steps {
-                              script {
-                                  // Run OWASP Dependency-Check using Docker
-                                  sh '''
-                                  docker run --rm -v $(pwd):/src \
-                                      owasp/dependency-check \
-                                      --scan /src \
-                                      --format HTML \
-                                      --out /src/dependency-check-report.html \
-                                      --failOnCVSS 7
-                                  '''
-                                  // Archive the report for Jenkins
-                                  archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
-                              }
+                              steps {
+                                              withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                                                  docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials') {
+                                                      sh '''
+                                                      docker run --rm -v $(pwd):/src \
+                                                          -e NVD_API_KEY=$NVD_API_KEY \
+                                                          owasp/dependency-check \
+                                                          --scan /src \
+                                                          --format HTML \
+                                                          --out /src/dependency-check-report.html \
+                                                          --failOnCVSS 7
+                                                      '''
+                                                      archiveArtifacts artifacts: 'dependency-check-report.html', allowEmptyArchive: true
+                                                  }
                           }
                       }
 //       stage('Dependency-check') {
