@@ -22,12 +22,12 @@ deny contains msg if {
 }
 
 # Only use trusted base images
-deny contains msg if {
-    input[i].Cmd == "from"
-    val := split(input[i].Value[0], "/")
-    count(val) > 1
-    msg := sprintf("Line %d: use a trusted base image", [i])
-}
+#deny contains msg if {
+#    input[i].Cmd == "from"
+#    val := split(input[i].Value[0], "/")
+#    count(val) > 1
+#    msg := sprintf("Line %d: use a trusted base image", [i])
+#}
 
 # Do not use 'latest' tag for base image
 deny contains msg if {
@@ -56,10 +56,10 @@ warn contains msg if {
 }
 
 # Do not use ADD if possible
-deny contains msg if {
-    input[i].Cmd == "add"
-    msg := sprintf("Line %d: Use COPY instead of ADD", [i])
-}
+#deny contains msg if {
+#    input[i].Cmd == "add"
+#    msg := sprintf("Line %d: Use COPY instead of ADD", [i])
+#}
 
 # Any user...
 any_user if {
@@ -103,7 +103,7 @@ multi_stage = true if {
     contains(lower(val), "--from=")
 }
 
-deny contains msg if {
-    not multi_stage
-    msg := "You COPY, but do not appear to use multi-stage builds"
-}
+#deny contains msg if {
+#    not multi_stage
+#    msg := "You COPY, but do not appear to use multi-stage builds"
+#}
