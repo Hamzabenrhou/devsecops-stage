@@ -1,18 +1,15 @@
-PORT=$(kubectl -n default get svc ${serviceName} -o json | jq -r '.spec.ports[].nodePort')
+PORT=$(kubectl -n default get svc ${serviceName} -o json | jq .spec.ports[].nodePort)
 
 mkdir -p $(pwd)/zap/wrk
-sudo chown -R $(id -u):$(id -g) $(pwd)/zap/wrk
-
+chmod 777 $(pwd)/zap/wrk
 echo "$(id -u):$(id -g)"
-
-docker run -v $(pwd)/zap/wrk/:/zap/wrk -t zaproxy/zap-weekly \
-  zap-api-scan.py -t "$applicationURL:$PORT/v3/api-docs" -f openapi -r /zap/wrk/zap_report.html
+docker run -v $(pwd)/zap/wrk/:/rw -t zaproxy/zap-weekly zap-api-scan.py -t $applicationURL:$PORT/v3/api-docs -f openapi -r zap_report.html
 
 exit_code=$?
 
 sudo mkdir -p owasp-zap-report
-sudo mv $(pwd)/zap/wrk/zap_report.html owasp-zap-report/
-sudo chown $(id -u):$(id -g) owasp-zap-report/zap_report.html
+sudo mv $(pwd)/zap/wrk/zap_report.html owasp-zap-report
+sudo chown $(id -u):$(id -g) owasp-zap-report
 
 echo "Exit Code : $exit_code"
 
