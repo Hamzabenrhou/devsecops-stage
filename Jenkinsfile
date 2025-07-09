@@ -110,7 +110,7 @@ pipeline {
                          steps {
                              withKubeConfig([credentialsId: 'kubeconfig']) {
                                 withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                                    sh 'docker run -v $(pwd):/zap/wrk/:rw -t zaproxy/zap-stable zap.sh -cmd -autorun /zap/wrk/zap.yaml'
+                                    sh 'docker run -v $(pwd):/zap/wrk/:rwx -t zaproxy/zap-stable zap.sh -cmd -autorun /zap/wrk/zap.yaml'
                                                   }
                                               }
                                               }
