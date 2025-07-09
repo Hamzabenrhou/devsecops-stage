@@ -1,8 +1,15 @@
 pipeline {
   agent any
-  environment{
-        imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
-  }
+
+  environment {
+      deploymentName = "devsecops"
+      containerName = "devsecops-container"
+      serviceName = "devsecops-svc"
+      imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
+      applicationURL = "http://devsecops.westeurope.cloudapp.azure.com"
+      applicationURI = "/increment/99"
+    }
+
 
   stages {
       stage('Build Artifact') {
