@@ -109,8 +109,10 @@ pipeline {
               stage('OWASP-ZAP DAST') {
                          steps {
                              withKubeConfig([credentialsId: 'kubeconfig']) {
+                                withDockerRegistry(credentialsId: 'docker-hub', url: '') {
                                     sh 'bash zap.sh'
                                                   }
+                                              }
                                               }
                 }
                }
