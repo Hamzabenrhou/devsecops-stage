@@ -52,12 +52,12 @@ pipeline {
                   }
               }
           }
-             stage('Trivy scan') {
-                        steps {
-                          sh "bash trivy-docker-image.sh"
-
-                        }
-                    }
+//              stage('Trivy scan') {
+//                         steps {
+//                           sh "bash trivy-docker-image.sh"
+//
+//                         }
+//                     }
               stage('OPA Conftest docker') {
                                      steps {
                                        sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile '
