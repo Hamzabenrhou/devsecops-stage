@@ -5,8 +5,10 @@ sudo chown -R $(id -u):$(id -g) $(pwd)/zap/wrk
 
 echo "$(id -u):$(id -g)"
 
-docker run -v $(pwd)/zap/wrk/:/zap/wrk -t zaproxy/zap-weekly \
-  zap-api-scan.py -t "$applicationURL:$PORT/v3/api-docs" -f openapi -r /zap/wrk/zap_report.html
+docker run -v $(pwd)/zap/wrk/:/zap/wrk -v $(pwd)/zap/filter.py:/zap/filter.py -t zaproxy/zap-weekly \
+  zap-api-scan.py -t "$applicationURL:$PORT/v3/api-docs" -f openapi \
+  -r /zap/wrk/zap_report.html --hook=/zap/filter.py
+
 
 exit_code=$?
 
