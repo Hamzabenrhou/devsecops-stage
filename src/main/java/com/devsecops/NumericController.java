@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://devsecops.westeurope.cloudapp.azure.com:31213";
+	private static final String baseURL = "http://devsecops.westeurope.cloudapp.azure.com:31213/plusone";
 	
 	RestTemplate restTemplate = new RestTemplate();
 	
@@ -41,14 +41,14 @@ public class NumericController {
 			return message;
 		}
 
-//		@GetMapping("/increment/{value}")
-//		public int increment(@PathVariable int value) {
-//			ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-//			String response = responseEntity.getBody();
-//			logger.info("Value Received in Request - " + value);
-//			logger.info("Node Service Response - " + response);
-//			return Integer.parseInt(response);
-//		}
+		@GetMapping("/increment/{value}")
+		public int increment(@PathVariable int value) {
+			ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+			String response = responseEntity.getBody();
+			logger.info("Value Received in Request - " + value);
+			logger.info("Node Service Response - " + response);
+			return Integer.parseInt(response);
+		}
 	}
 
 }
