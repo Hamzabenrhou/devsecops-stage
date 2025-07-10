@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://devsecops.westeurope.cloudapp.azure.com:31213/increment";
+	private static final String baseURL = "http://node-service:5000/plusone";
 
 	RestTemplate restTemplate = new RestTemplate();
 
