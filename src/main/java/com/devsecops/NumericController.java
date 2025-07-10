@@ -18,10 +18,10 @@ import org.springframework.web.client.RestTemplate;
 public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://devsecops.westeurope.cloudapp.azure.com:31213/plusone";
-	
+	private static final String baseURL = "http://devsecops.westeurope.cloudapp.azure.com:31213/increment";
+
 	RestTemplate restTemplate = new RestTemplate();
-	
+
 	@RestController
 	public class compare {
 
