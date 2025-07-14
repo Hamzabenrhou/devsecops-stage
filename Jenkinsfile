@@ -134,14 +134,14 @@ pipeline {
                                 steps {
                                     withKubeConfig([credentialsId: 'kubeconfig']){
                                     sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s-prod-service.yaml"
-                                    sh "kubectl apply -f k8s-prod-service.yaml"
+                                    sh "kubectl -n prod apply -f k8s-prod-service.yaml"
                                   }
                                   }
                                 }
               stage('Check Rollout Status prod') {
                                        steps {
                                            withKubeConfig([credentialsId: 'kubeconfig']) {
-                                               sh "kubectl  rollout status deployment/devsecops"
+                                               sh "kubectl -n prod rollout status deployment/devsecops"
                                            }
                                        }
                                    }
