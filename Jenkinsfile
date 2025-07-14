@@ -138,7 +138,7 @@ pipeline {
                                   }
                                   }
                                 }
-              stage('Check Rollout Status') {
+              stage('Check Rollout Status prod') {
                                        steps {
                                            withKubeConfig([credentialsId: 'kubeconfig']) {
                                                sh "kubectl -n prod rollout status deployment/devsecops"
