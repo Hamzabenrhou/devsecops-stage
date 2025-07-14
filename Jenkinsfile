@@ -11,7 +11,7 @@ pipeline {
       serviceName = "devsecops-svc"
       imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
       applicationURL = "http://devsecops.westeurope.cloudapp.azure.com"
-      applicationURI = "/compare/99"
+      applicationURI = "/increment/99"
     }
 
 
