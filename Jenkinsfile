@@ -87,10 +87,10 @@ pipeline {
              // SPRING BOOT IMAGE BUILD + PUSH
              stage('Build & Push Spring Boot Image') {
                steps {
-                 script {
+                 dir('springboot-app') {
                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
                      sh """
-                       docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} springboot-app
+                       docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
                        docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
                      """
                    }
@@ -98,13 +98,13 @@ pipeline {
                }
              }
 
-             // NODE.JS IMAGE BUILD + PUSH
+
              stage('Build & Push Node.js Image') {
                steps {
-                 script {
+                 dir('node-app') {
                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
                      sh """
-                       docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} node-app
+                       docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
                        docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
                      """
                    }
