@@ -75,15 +75,43 @@ pipeline {
 
                                      }
                                  }
-             stage('Docker Build and Push') {
-                   steps {
-                       withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                                           sh 'printenv' // For debugging
-                                           sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
-                                           sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
-                     }
-                     }
-                  }
+//              stage('Docker Build and Push') {
+//                    steps {
+//                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+//                                            sh 'printenv' // For debugging
+//                                            sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
+//                                            sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
+//                      }
+//                      }
+//                   }
+             // SPRING BOOT IMAGE BUILD + PUSH
+             stage('Build & Push Spring Boot Image') {
+               steps {
+                 script {
+                   withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+                     sh """
+                       docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} springboot-app
+                       docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+                     """
+                   }
+                 }
+               }
+             }
+
+             // NODE.JS IMAGE BUILD + PUSH
+             stage('Build & Push Node.js Image') {
+               steps {
+                 script {
+                   withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+                     sh """
+                       docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} node-app
+                       docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
+                     """
+                   }
+                 }
+               }
+             }
+
              stage('kubesec') {
                                      steps {
                                        sh "bash kubesec-scan.sh"
@@ -110,6 +138,15 @@ pipeline {
                      }
                      }
                    }
+             stage('Kubernetes Deployment - Node.js') {
+               steps {
+                 withKubeConfig([credentialsId: 'kubeconfig']) {
+                   sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
+                   sh "kubectl apply -f node-app/node-k8s.yaml"
+                 }
+               }
+             }
+
              stage('Check Rollout Status') {
                          steps {
                              withKubeConfig([credentialsId: 'kubeconfig']) {
