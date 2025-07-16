@@ -87,13 +87,13 @@ pipeline {
              // SPRING BOOT IMAGE BUILD + PUSH
              stage('Build & Push Spring Boot Image') {
                steps {
-                 dir('springboot-app') {
+
                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
                      sh """
                        docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
                        docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
                      """
-                   }
+                   
                  }
                }
              }
