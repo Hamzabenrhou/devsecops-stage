@@ -58,7 +58,7 @@ pipeline {
               # Run GPTScan on your source code (adjust path as needed)
 
                             cd /opt/GPTScan
-                            python3 src/main.py --path . --model gpt-3.5-turbo --output gptscan_report.md
+                          PYTHONPATH=src  python3 src/main.py --path . --model gpt-3.5-turbo --output gptscan_report.md
 
           '''
       }
