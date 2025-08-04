@@ -12,6 +12,7 @@ pipeline {
       imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
       applicationURL = "http://devsecops.westeurope.cloudapp.azure.com"
       applicationURI = "/increment/99"
+      OPENAI_API_KEY = credentials('openai-gptscan')
     }
 
 
@@ -51,6 +52,30 @@ pipeline {
                   }
               }
               }
+  stage('Run GPTScan') {
+      steps {
+          sh '''
+              # Run GPTScan on your source code (adjust path as needed)
+               python3 /root/GPTScan/gptscan.py --path . --model gpt-3.5-turbo --output gptscan_report.md
+          '''
+      }
+  }
+  stage('Archive GPTScan Report') {
+      steps {
+          archiveArtifacts artifacts: 'gptscan_report.md', fingerprint: true
+      }
+  }
+  stage('Check GPTScan Findings') {
+      steps {
+          script {
+              def report = readFile('gptscan_report.md')
+              if (report.contains("SQL injection") || report.contains("hardcoded password") || report.contains("security issue")) {
+                  error("⚠️ GPTScan detected security issues in the code!")
+              }
+          }
+      }
+  }
+
   stage('Dependency Check') {
               steps {
                   withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
@@ -93,7 +118,7 @@ pipeline {
                        docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
                        docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
                      """
-                   
+
                  }
                }
              }
@@ -183,6 +208,7 @@ pipeline {
                                        }
                                    }
                }
+
   post{
     always{
         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
