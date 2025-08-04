@@ -59,7 +59,7 @@ pipeline {
 
                             cd /opt/GPTScan
                           PYTHONPATH=src python3 src/main.py \
-                            --s ./solidity-src/contracts \
+                            --s ./ \
                             --output /opt/GPTScan/gptscan_report.md \
                             --gptkey $OPENAI_API_KEY
                             cp /opt/GPTScan/gptscan_report.md $WORKSPACE/
