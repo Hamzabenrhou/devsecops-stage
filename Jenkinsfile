@@ -59,7 +59,7 @@ pipeline {
 
                             cd /opt/GPTScan
                           PYTHONPATH=src python3 src/main.py \
-                            --source . \
+                            --source contracts/HelloWorld.sol \
                             --output gptscan_report.md \
                             --gptkey $OPENAI_API_KEY
 
