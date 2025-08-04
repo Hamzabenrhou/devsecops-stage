@@ -56,10 +56,10 @@ pipeline {
       steps {
           sh '''
               # Run GPTScan on your source code (adjust path as needed)
-                          git clone https://github.com/Hamzabenrhou/devsecops-stage.git ./solidity-src
+
                             cd /opt/GPTScan
                           PYTHONPATH=src python3 src/main.py \
-                            --s ./solidity-src/contracts/ \
+                            --s ./solidity-src/contracts \
                             --output gptscan_report.md \
                             --gptkey $OPENAI_API_KEY
 
