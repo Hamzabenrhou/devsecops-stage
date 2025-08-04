@@ -62,13 +62,14 @@ pipeline {
                             --s ./solidity-src/contracts \
                             --output /opt/GPTScan/gptscan_report.md \
                             --gptkey $OPENAI_API_KEY
+                            cp /opt/GPTScan/gptscan_report.md $WORKSPACE/
 
           '''
       }
   }
   stage('Archive GPTScan Report') {
       steps {
-          archiveArtifacts artifacts: 'gptscan_report.md', fingerprint: true
+          archiveArtifacts artifacts: 'gptscan_report.md'
       }
   }
   stage('Check GPTScan Findings') {
