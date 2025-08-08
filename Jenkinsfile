@@ -52,6 +52,18 @@ pipeline {
                   }
               }
               }
+
+              stage('Build & Run GPT Scanner') {
+                          steps {
+                              sh 'mvn clean compile'
+                              sh 'mvn exec:java -Dexec.mainClass="GptJavaScanner"'
+                          }
+                      }
+                      stage('Archive Report') {
+                          steps {
+                              archiveArtifacts artifacts: 'gpt_java_report.md', fingerprint: true
+                          }
+                      }
   stage('Run GPTScan') {
       steps {
           sh '''
