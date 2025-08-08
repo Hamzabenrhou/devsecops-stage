@@ -55,7 +55,7 @@ pipeline {
 
               stage('Build & Run GPT Scanner') {
                           steps {
-                              
+
                               sh 'mvn clean compile exec:java"'
                           }
                       }
