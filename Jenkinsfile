@@ -53,17 +53,17 @@ pipeline {
               }
               }
 
-              stage('Build & Run GPT Scanner') {
-                          steps {
-
-                              sh 'mvn clean compile exec:java'
-                          }
-                      }
-                      stage('Archive Report') {
-                          steps {
-                              archiveArtifacts artifacts: 'gpt_java_report.md', fingerprint: true
-                          }
-                      }
+//               stage('Build & Run GPT Scanner') {
+//                           steps {
+//
+//                               sh 'mvn clean compile exec:java'
+//                           }
+//                       }
+//                       stage('Archive Report') {
+//                           steps {
+//                               archiveArtifacts artifacts: 'gpt_java_report.md', fingerprint: true
+//                           }
+//                       }
   stage('Run GPTScan') {
       steps {
           sh '''
@@ -107,27 +107,27 @@ pipeline {
                   }
               }
           }
-//              stage('Trivy scan') {
-//                         steps {
-//                           sh "bash trivy-docker-image.sh"
-//
-//                         }
-//                     }
+             stage('Trivy scan') {
+                        steps {
+                          sh "bash trivy-docker-image.sh"
+
+                        }
+                    }
               stage('OPA Conftest docker') {
                                      steps {
                                        sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile '
 
                                      }
                                  }
-//              stage('Docker Build and Push') {
-//                    steps {
-//                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-//                                            sh 'printenv' // For debugging
-//                                            sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
-//                                            sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
-//                      }
-//                      }
-//                   }
+             stage('Docker Build and Push') {
+                   steps {
+                       withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+                                           sh 'printenv' // For debugging
+                                           sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
+                                           sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
+                     }
+                     }
+                  }
              // SPRING BOOT IMAGE BUILD + PUSH
              stage('Build & Push Spring Boot Image') {
                steps {
