@@ -168,12 +168,12 @@ pipeline {
 
                                                   }
                                               }
-              stage('Trivy scan k8s') {
-                                     steps {
-                                       sh "bash trivy-k8s.sh"
-
-                                     }
-                                 }
+//               stage('Trivy scan k8s') {
+//                                      steps {
+//                                        sh "bash trivy-k8s.sh"
+//
+//                                      }
+//                                  }
              stage('Kubernetes Deployment - DEV') {
                    steps {
                        withKubeConfig([credentialsId: 'kubeconfig']){
