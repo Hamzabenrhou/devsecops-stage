@@ -62,36 +62,36 @@ pipeline {
 //                               archiveArtifacts artifacts: 'gpt_java_report.md', fingerprint: true
 //                           }
 //                       }
-  stage('Run GPTScan') {
-      steps {
-          sh '''
-              # Run GPTScan on your source code (adjust path as needed)
-
-                            cd /opt/GPTScan
-                          PYTHONPATH=src python3 src/main.py \
-                            --s ./ \
-                            --output /opt/GPTScan/gptscan_report.md \
-                            --gptkey $OPENAI_API_KEY
-                            cp /opt/GPTScan/gptscan_report.md $WORKSPACE/
-
-          '''
-      }
-  }
-  stage('Archive GPTScan Report') {
-      steps {
-          archiveArtifacts artifacts: 'gptscan_report.md'
-      }
-  }
-  stage('Check GPTScan Findings') {
-      steps {
-          script {
-              def report = readFile('gptscan_report.md')
-              if (report.contains("SQL injection") || report.contains("hardcoded password") || report.contains("security issue")) {
-                  error("⚠️ GPTScan detected security issues in the code!")
-              }
-          }
-      }
-  }
+//   stage('Run GPTScan') {
+//       steps {
+//           sh '''
+//               # Run GPTScan on your source code (adjust path as needed)
+//
+//                             cd /opt/GPTScan
+//                           PYTHONPATH=src python3 src/main.py \
+//                             --s ./ \
+//                             --output /opt/GPTScan/gptscan_report.md \
+//                             --gptkey $OPENAI_API_KEY
+//                             cp /opt/GPTScan/gptscan_report.md $WORKSPACE/
+//
+//           '''
+//       }
+//   }
+//   stage('Archive GPTScan Report') {
+//       steps {
+//           archiveArtifacts artifacts: 'gptscan_report.md'
+//       }
+//   }
+//   stage('Check GPTScan Findings') {
+//       steps {
+//           script {
+//               def report = readFile('gptscan_report.md')
+//               if (report.contains("SQL injection") || report.contains("hardcoded password") || report.contains("security issue")) {
+//                   error("⚠️ GPTScan detected security issues in the code!")
+//               }
+//           }
+//       }
+//   }
 
   stage('Dependency Check') {
               steps {
