@@ -15,25 +15,30 @@ pipeline {
 
 
   stages {
-      stage('Pull Secret from Vault') {
+      stage('Test Vault Connection') {
                   steps {
-                      withVault(
-                          configuration: [
-                              vaultUrl: 'https://104.197.188.180:8200',  // ensure https here too (overrides global if needed)
-                              vaultCredentialId: 'vault-jenkins-approle',
-                              skipSslVerification: true
-                          ],
-                          vaultSecrets: [
-                              [
-                                  path: 'jenkins/test',
-                                  engineVersion: 2,
-                                  secretValues: [
-                                      [vaultKey: 'my-api-key', envVar: 'MY_SECRET']
+                      script {
+                          try {
+                              withVault(
+                                  configuration: [
+                                      vaultUrl: 'https://104.197.188.180:8200',
+                                      vaultCredentialId: 'vault-jenkins-approle',
+                                      skipSslVerification: true
+                                  ],
+                                  vaultSecrets: [
+                                      [path: 'jenkins/test',
+                                       engineVersion: 2,
+                                       secretValues: [
+                                           [vaultKey: 'my-api-key', envVar: 'TEST_SECRET']
+                                       ]]
                                   ]
-                              ]
-                          ]
-                      ) {
-                          sh 'echo "Secret (masked): $MY_SECRET"'
+                              ) {
+                                  echo "Vault connection + secret retrieval succeeded!"
+                                  echo "Secret value (masked): ${env.TEST_SECRET ?: 'not found'}"
+                              }
+                          } catch (Exception e) {
+                              error "Vault test failed: ${e.getMessage()}"
+                          }
                       }
                   }
               }
