@@ -19,8 +19,8 @@ pipeline {
                   steps {
                       withVault(
                           configuration: [
-                              vaultUrl: 'https://104.197.188.180:8200',
-                              vaultCredentialId: 'vault-jenkins-approle',   // ← your credential ID
+                              vaultUrl: 'https://104.197.188.180:8200',  // ensure https here too (overrides global if needed)
+                              vaultCredentialId: 'vault-jenkins-approle',
                               skipSslVerification: true
                           ],
                           vaultSecrets: [
@@ -33,9 +33,7 @@ pipeline {
                               ]
                           ]
                       ) {
-                          sh '''
-                              echo "Secret value (should be masked): $MY_SECRET"
-                          '''
+                          sh 'echo "Secret (masked): $MY_SECRET"'
                       }
                   }
               }
