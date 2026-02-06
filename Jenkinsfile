@@ -15,30 +15,28 @@ pipeline {
 
 
   stages {
-      stage('Test Vault Connection') {
+      stage('Fetch Vault Secret') {
                   steps {
-                      script {
-                          try {
-                              withVault(
-                                  configuration: [
-                                      vaultUrl: 'https://104.197.188.180:8200',
-                                      vaultCredentialId: 'vault-jenkins-approle',
-                                      skipSslVerification: true
-                                  ],
-                                  vaultSecrets: [
-                                      [path: 'jenkins/test',
-                                       engineVersion: 2,
-                                       secretValues: [
-                                           [vaultKey: 'my-api-key', envVar: 'TEST_SECRET']
-                                       ]]
+                      withVault(
+                          configuration: [
+                              vaultUrl: 'https://104.197.188.180:8200',
+                              vaultCredentialId: 'vault-jenkins-approle',
+                              skipSslVerification: true,
+                              prefixPath: 'secret'  // ← This is the key fix for KV v2 mount
+                          ],
+                          vaultSecrets: [
+                              [
+                                  path: 'jenkins/test',  // relative to prefixPath
+                                  engineVersion: 2,
+                                  secretValues: [
+                                      [vaultKey: 'my-api-key', envVar: 'MY_SECRET']
                                   ]
-                              ) {
-                                  echo "Vault connection + secret retrieval succeeded!"
-                                  echo "Secret value (masked): ${env.TEST_SECRET ?: 'not found'}"
-                              }
-                          } catch (Exception e) {
-                              error "Vault test failed: ${e.getMessage()}"
-                          }
+                              ]
+                          ]
+                      ) {
+                          sh '''
+                              echo "Secret from Vault (masked): $MY_SECRET"
+                          '''
                       }
                   }
               }
