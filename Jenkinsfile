@@ -1,4 +1,4 @@
-@Library('slack') _
+//@Library('slack') _
 
 pipeline {
   agent any
@@ -8,13 +8,37 @@ pipeline {
       containerName = "devsecops-container"
       serviceName = "devsecops-svc"
       imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
-      applicationURL = "http://devsecops.westeurope.cloudapp.azure.com"
+      applicationURL = "http://104.197.188.180"
       applicationURI = "/increment/99"
-      OPENAI_API_KEY = credentials('openai-gptscan')
+
     }
 
 
   stages {
+      stage('Pull Secret from Vault') {
+                  steps {
+                      withVault(
+                          configuration: [
+                              vaultUrl: 'https://104.197.188.180:8200',
+                              vaultCredentialId: 'vault-jenkins-approle',   // ← your credential ID
+                              skipSslVerification: true
+                          ],
+                          vaultSecrets: [
+                              [
+                                  path: 'jenkins/test',
+                                  engineVersion: 2,
+                                  secretValues: [
+                                      [vaultKey: 'my-api-key', envVar: 'MY_SECRET']
+                                  ]
+                              ]
+                          ]
+                      ) {
+                          sh '''
+                              echo "Secret value (should be masked): $MY_SECRET"
+                          '''
+                      }
+                  }
+              }
       stage('Build Artifact') {
             steps {
               sh "mvn clean package -DskipTests=true"
@@ -94,151 +118,151 @@ pipeline {
 //   }
 
 
-  stage('Dependency Check') {
-              steps {
-                  withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-                      sh "mvn dependency-check:check -DnvdApiKey=\${NVD_API_KEY}"
-                  }
-              }
-              post {
-                  always {
-                      dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-                  }
-              }
-          }
-             stage('Trivy scan') {
-                        steps {
-                          sh "bash trivy-docker-image.sh"
-
-                        }
-                    }
-              stage('OPA Conftest docker') {
-                                     steps {
-                                       sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile '
-
-                                     }
-                                 }
-             stage('Docker Build and Push') {
-                   steps {
-                       withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                                           sh 'printenv' // For debugging
-                                           sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
-                                           sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
-                     }
-                     }
-                  }
-             // SPRING BOOT IMAGE BUILD + PUSH
-             stage('Build & Push Spring Boot Image') {
-               steps {
-
-                   withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                     sh """
-                       docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
-                       docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
-                     """
-
-                 }
-               }
-             }
-
-
-             stage('Build & Push Node.js Image') {
-               steps {
-                 dir('node-app') {
-                   withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                     sh """
-                       docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
-                       docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
-                     """
-                   }
-                 }
-               }
-             }
-
-             stage('kubesec') {
-                                     steps {
-                                       sh "bash kubesec-scan.sh"
-
-                                     }
-                                 }
-             stage('OPA Conftest k8s') {
-                                                  steps {
-                                                    sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml '
-
-                                                  }
-                                              }
-//               stage('Trivy scan k8s') {
+//   stage('Dependency Check') {
+//               steps {
+//                   withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+//                       sh "mvn dependency-check:check -DnvdApiKey=\${NVD_API_KEY}"
+//                   }
+//               }
+//               post {
+//                   always {
+//                       dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+//                   }
+//               }
+//           }
+//              stage('Trivy scan') {
+//                         steps {
+//                           sh "bash trivy-docker-image.sh"
+//
+//                         }
+//                     }
+//               stage('OPA Conftest docker') {
 //                                      steps {
-//                                        sh "bash trivy-k8s.sh"
+//                                        sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile '
 //
 //                                      }
 //                                  }
-             stage('Kubernetes Deployment - DEV') {
-                   steps {
-                       withKubeConfig([credentialsId: 'kubeconfig']){
-                       sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
-                       sh "kubectl apply -f k8s_deployment_service.yaml"
-                     }
-                     }
-                   }
-             stage('Kubernetes Deployment - Node.js') {
-               steps {
-                 withKubeConfig([credentialsId: 'kubeconfig']) {
-                   sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
-                   sh "kubectl apply -f node-app/node-k8s.yaml"
-                 }
+//              stage('Docker Build and Push') {
+//                    steps {
+//                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+//                                            sh 'printenv' // For debugging
+//                                            sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
+//                                            sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
+//                      }
+//                      }
+//                   }
+//              // SPRING BOOT IMAGE BUILD + PUSH
+//              stage('Build & Push Spring Boot Image') {
+//                steps {
+//
+//                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+//                      sh """
+//                        docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
+//                        docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+//                      """
+//
+//                  }
+//                }
+//              }
+//
+//
+//              stage('Build & Push Node.js Image') {
+//                steps {
+//                  dir('node-app') {
+//                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+//                      sh """
+//                        docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
+//                        docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
+//                      """
+//                    }
+//                  }
+//                }
+//              }
+//
+//              stage('kubesec') {
+//                                      steps {
+//                                        sh "bash kubesec-scan.sh"
+//
+//                                      }
+//                                  }
+//              stage('OPA Conftest k8s') {
+//                                                   steps {
+//                                                     sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml '
+//
+//                                                   }
+//                                               }
+// //               stage('Trivy scan k8s') {
+// //                                      steps {
+// //                                        sh "bash trivy-k8s.sh"
+// //
+// //                                      }
+// //                                  }
+//              stage('Kubernetes Deployment - DEV') {
+//                    steps {
+//                        withKubeConfig([credentialsId: 'kubeconfig']){
+//                        sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+//                        sh "kubectl apply -f k8s_deployment_service.yaml"
+//                      }
+//                      }
+//                    }
+//              stage('Kubernetes Deployment - Node.js') {
+//                steps {
+//                  withKubeConfig([credentialsId: 'kubeconfig']) {
+//                    sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
+//                    sh "kubectl apply -f node-app/node-k8s.yaml"
+//                  }
+//                }
+//              }
+//
+//              stage('Check Rollout Status') {
+//                          steps {
+//                              withKubeConfig([credentialsId: 'kubeconfig']) {
+//                                  sh "kubectl rollout status deployment/devsecops"
+//                              }
+//                          }
+//                      }
+//               stage('OWASP-ZAP DAST') {
+//                          steps {
+//                              withKubeConfig([credentialsId: 'kubeconfig']) {
+//                                 withDockerRegistry(credentialsId: 'docker-hub', url: '') {
+//                                     sh 'bash zap.sh'
+//                                                   }
+//                                               }
+//                                               }
+//                 }
+//
+//
+//
+//
+//               stage('Kubernetes Deployment prod- DEV') {
+//                                 steps {
+//                                     withKubeConfig([credentialsId: 'kubeconfig']){
+//                                     sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s-prod-service.yaml"
+//                                     sh "kubectl -n prod apply -f k8s-prod-service.yaml"
+//                                   }
+//                                   }
+//                                 }
+//               stage('Check Rollout Status prod') {
+//                                        steps {
+//                                            withKubeConfig([credentialsId: 'kubeconfig']) {
+//                                                sh "kubectl -n prod rollout status deployment/devsecops"
+//                                            }
+//                                        }
+                                    }
                }
-             }
 
-             stage('Check Rollout Status') {
-                         steps {
-                             withKubeConfig([credentialsId: 'kubeconfig']) {
-                                 sh "kubectl rollout status deployment/devsecops"
-                             }
-                         }
-                     }
-              stage('OWASP-ZAP DAST') {
-                         steps {
-                             withKubeConfig([credentialsId: 'kubeconfig']) {
-                                withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-                                    sh 'bash zap.sh'
-                                                  }
-                                              }
-                                              }
-                }
-
-
-
-
-              stage('Kubernetes Deployment prod- DEV') {
-                                steps {
-                                    withKubeConfig([credentialsId: 'kubeconfig']){
-                                    sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s-prod-service.yaml"
-                                    sh "kubectl -n prod apply -f k8s-prod-service.yaml"
-                                  }
-                                  }
-                                }
-              stage('Check Rollout Status prod') {
-                                       steps {
-                                           withKubeConfig([credentialsId: 'kubeconfig']) {
-                                               sh "kubectl -n prod rollout status deployment/devsecops"
-                                           }
-                                       }
-                                   }
-               }
-
-  post{
-    always{
-        publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
-        sendNotifications currentBuild.result
-    }
-    }
-
-
-
-
-
-             }
+//   post{
+//     always{
+//         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
+//         sendNotifications currentBuild.result
+//     }
+//     }
+//
+//
+//
+//
+//
+//              }
 
 
 
