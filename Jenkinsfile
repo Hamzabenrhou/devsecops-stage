@@ -15,6 +15,7 @@ pipeline {
 
 
 
+
   stages {
       stage('Fetch Vault Secret') {
                   steps {
