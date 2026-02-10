@@ -12,6 +12,7 @@ pipeline {
       applicationURI = "/increment/99"
 
     }
+
     
   stages {
       stage('Fetch Vault Secret') {
