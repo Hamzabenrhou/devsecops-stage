@@ -4,6 +4,7 @@ pipeline {
   agent any
 
   environment {
+      SONAR_TOKEN = ''
       deploymentName = "devsecops"
       containerName = "devsecops-container"
       serviceName = "devsecops-svc"
@@ -13,7 +14,7 @@ pipeline {
 
     }
 
-    
+
   stages {
       stage('Fetch Vault Secret') {
                   steps {
@@ -58,23 +59,50 @@ pipeline {
               }
             }
 
-//       stage('SonarQube-SAST') {
-//                   steps {
-//                     withSonarQubeEnv('SonarQube'){
-//                     sh "mvn clean verify sonar:sonar \
-//                           -Dsonar.projectKey=numeric-application \
-//                           -Dsonar.host.url=http://devsecops.westeurope.cloudapp.azure.com:9000 \
-//                           -Dsonar.login=sqp_b19a25b1a74f39b82f243e8acd5612192da50f1e"
-//
-//                   }
-//                   timeout(time: 2, unit: 'MINUTES') {
-//                             script{
-//
-//                                       waitForQualityGate abortPipeline: true
-//                             }
-//                   }
-//               }
-//               }
+stage('Fetch Sonar Token from Vault') {
+            steps {
+                withVault(
+                    configuration: [
+                        vaultUrl: 'https://104.197.188.180:8200',
+                        vaultCredentialId: 'vault-jenkins-approle',
+                        skipSslVerification: true,
+                        prefixPath: 'secret'   // if needed from previous success
+                    ],
+                    vaultSecrets: [
+                        [path: 'jenkins/sonarqube',
+                         engineVersion: 2,
+                         secretValues: [
+                             [vaultKey: 'analysis_token', envVar: 'SONAR_TOKEN']
+                         ]
+                        ]
+                    ]
+                ) {
+                    echo "Sonar token loaded from Vault (masked)"
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {  // 'SonarQube' = your server name in Jenkins config
+                    // Example for Maven project - adjust for your tech stack
+                    sh 'mvn clean verify sonar:sonar -Dsonar.token=$SONAR_TOKEN'
+
+                    // Or for generic sonar-scanner:
+                    // sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=your-project-key'
+                }
+            }
+        }
+
+        // Optional: wait for quality gate result
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+    
 
 //               stage('Build & Run GPT Scanner') {
 //                           steps {
