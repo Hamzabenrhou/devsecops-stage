@@ -82,7 +82,7 @@ stage('SonarQube Analysis') {
 
             withSonarQubeEnv('SonarQube') {
                 // Use the token explicitly
-                sh 'mvn clean verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=numeric'
+                sh 'mvn clean verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=pfe'
             }
         }
     }
