@@ -59,50 +59,43 @@ pipeline {
               }
             }
 
-stage('Fetch Sonar Token from Vault') {
-            steps {
-                withVault(
-                    configuration: [
-                        vaultUrl: 'https://104.197.188.180:8200',
-                        vaultCredentialId: 'vault-jenkins-approle',
-                        skipSslVerification: true,
-                        prefixPath: 'secret'   // if needed from previous success
-                    ],
-                    vaultSecrets: [
-                        [path: 'jenkins/sonarqube',
-                         engineVersion: 2,
-                         secretValues: [
-                             [vaultKey: 'analysis_token', envVar: 'SONAR_TOKEN']
-                         ]
-                        ]
-                    ]
-                ) {
-                    echo "Sonar token loaded from Vault (masked)"
-                }
+stage('SonarQube Analysis') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/sonarqube',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'analysis_token', envVar: 'SONAR_TOKEN']
+                 ]
+                ]
+            ]
+        ) {
+            // Now SONAR_TOKEN is available in this scope
+            echo "Sonar token loaded from Vault (length: ${SONAR_TOKEN?.length() ?: 0})"
+
+            withSonarQubeEnv('SonarQube') {
+                // Use the token explicitly
+                sh 'mvn clean verify sonar:sonar -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=numeric'
             }
         }
+    }
+}
 
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube') {  // 'SonarQube' = your server name in Jenkins config
-                    // Example for Maven project - adjust for your tech stack
-                    sh 'mvn clean verify sonar:sonar -Dsonar.token=$SONAR_TOKEN'
-
-                    // Or for generic sonar-scanner:
-                    // sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN -Dsonar.projectKey=your-project-key'
-                }
-            }
+// Optional Quality Gate (can be separate or inside)
+stage('Quality Gate') {
+    steps {
+        timeout(time: 5, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
         }
-
-        // Optional: wait for quality gate result
-        stage('Quality Gate') {
-            steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-    
+    }
+}
 
 //               stage('Build & Run GPT Scanner') {
 //                           steps {
