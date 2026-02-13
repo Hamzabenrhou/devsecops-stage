@@ -115,7 +115,7 @@ stage('Quality Gate') {
                  [path: 'jenkins/nvd-api-key',  // ← your path
                   engineVersion: 2,
                   secretValues: [
-                      [vaultKey: 'nvd_api_key', envVar: 'NVD_API_KEY']  // adjust vaultKey if your key name is different
+                      [vaultKey: 'NVD_API_KEY', envVar: 'NVD_API_KEY']  // adjust vaultKey if your key name is different
                   ]
                  ]
              ]
