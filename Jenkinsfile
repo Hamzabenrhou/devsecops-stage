@@ -4,6 +4,7 @@ pipeline {
   agent any
 
   environment {
+      NVD_API_KEY = ''
       SONAR_TOKEN = ''
       deploymentName = "devsecops"
       containerName = "devsecops-container"
