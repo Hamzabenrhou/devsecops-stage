@@ -140,12 +140,11 @@ stage('Quality Gate') {
 
                         }
                     }
-              stage('OPA Conftest docker') {
-                                     steps {
-                                       sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile '
-
-                                     }
-                                 }
+             stage('OPA Conftest docker') {
+                 steps {
+                     sh "docker run --rm -v \$(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile"
+                 }
+             }
 //              stage('Docker Build and Push') {
 //                    steps {
 //                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
