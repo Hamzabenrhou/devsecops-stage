@@ -142,7 +142,15 @@ stage('Quality Gate') {
                     }
              stage('OPA Conftest docker') {
                  steps {
-                     sh "docker run --rm -v \$(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile"
+                     script {
+                         def workspace = pwd()  // Groovy pwd() returns current workspace path
+                         sh """
+                             docker run --rm \
+                                 -v ${workspace}:/project \
+                                 openpolicyagent/conftest \
+                                 test --policy opa-docker-security.rego Dockerfile
+                         """
+                     }
                  }
              }
 //              stage('Docker Build and Push') {
