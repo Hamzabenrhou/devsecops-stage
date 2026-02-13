@@ -140,6 +140,11 @@ stage('Quality Gate') {
 
                         }
                     }
+              stage('Debug Files') {
+                  steps {
+                      sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
+                  }
+              }
               stage('OPA Conftest docker') {
                                      steps {
                                       script {
