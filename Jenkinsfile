@@ -145,26 +145,21 @@ stage('Quality Gate') {
                       sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
                   }
               }
-            stage('OPA Conftest docker') {
-                steps {
-                    // Debug: confirm files are present
-                    sh '''
-                        pwd
-                        ls -l Dockerfile opa-docker-security.rego || echo "Files missing!"
-                    '''
+           stage('OPA Conftest docker') {
+               steps {
+                   sh 'docker pull openpolicyagent/conftest:latest || true'
+                   sh 'docker run --rm openpolicyagent/conftest:latest --version'  // debug: print version
 
-                    // Use specific version with --exit-code support
                    sh """
-                       docker pull openpolicyagent/conftest:v0.58.0
                        docker run --rm \
                            -v "\$(pwd)":/project \
-                           openpolicyagent/conftest:v0.58.0 \
+                           openpolicyagent/conftest:latest \
                            test --policy opa-docker-security.rego \
-                           
+                           --exit-code 1 \
                            Dockerfile
                    """
-                }
-            }
+               }
+           }
 //              stage('Docker Build and Push') {
 //                    steps {
 //                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
