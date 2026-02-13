@@ -99,61 +99,40 @@ stage('Quality Gate') {
 }
 
 
-//               stage('Build & Run GPT Scanner') {
-//                           steps {
-//
-//                               sh 'mvn clean compile exec:java'
-//                           }
-//                       }
-//                       stage('Archive Report') {
-//                           steps {
-//                               archiveArtifacts artifacts: 'gpt_java_report.md', fingerprint: true
-//                           }
-//                       }
-//   stage('Run GPTScan') {
-//       steps {
-//           sh '''
-//               # Run GPTScan on your source code (adjust path as needed)
-//
-//                             cd /opt/GPTScan
-//                           PYTHONPATH=src python3 src/main.py \
-//                             --s ./ \
-//                             --output /opt/GPTScan/gptscan_report.md \
-//                             --gptkey $OPENAI_API_KEY
-//                             cp /opt/GPTScan/gptscan_report.md $WORKSPACE/
-//
-//           '''
-//       }
-//   }
-//   stage('Archive GPTScan Report') {
-//       steps {
-//           archiveArtifacts artifacts: 'gptscan_report.md'
-//       }
-//   }
-//   stage('Check GPTScan Findings') {
-//       steps {
-//           script {
-//               def report = readFile('gptscan_report.md')
-//               if (report.contains("SQL injection") || report.contains("hardcoded password") || report.contains("security issue")) {
-//                   error("⚠️ GPTScan detected security issues in the code!")
-//               }
-//           }
-//       }
-//   }
 
 
-//   stage('Dependency Check') {
-//               steps {
-//                   withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
-//                       sh "mvn dependency-check:check -DnvdApiKey=\${NVD_API_KEY}"
-//                   }
-//               }
-//               post {
-//                   always {
-//                       dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-//                   }
-//               }
-//           }
+ stage('Dependency Check') {
+     steps {
+         withVault(
+             configuration: [
+                 vaultUrl: 'https://104.197.188.180:8200',
+                 vaultCredentialId: 'vault-jenkins-approle',
+                 skipSslVerification: true,
+                 prefixPath: 'secret'   // keep if it worked for Sonar
+             ],
+             vaultSecrets: [
+                 [path: 'jenkins/nvd-api-key',  // ← your path
+                  engineVersion: 2,
+                  secretValues: [
+                      [vaultKey: 'nvd_api_key', envVar: 'NVD_API_KEY']  // adjust vaultKey if your key name is different
+                  ]
+                 ]
+             ]
+         ) {
+             echo "NVD API key loaded from Vault (length: ${NVD_API_KEY?.length() ?: 0})"
+
+             // Run the check using the fetched key
+             sh 'mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY'
+         }
+     }
+
+     post {
+         always {
+             // Publish the HTML/XML report (Dependency-Check plugin required)
+             dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+         }
+     }
+ }
 //              stage('Trivy scan') {
 //                         steps {
 //                           sh "bash trivy-docker-image.sh"
