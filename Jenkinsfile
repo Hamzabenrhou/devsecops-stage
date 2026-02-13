@@ -145,22 +145,25 @@ stage('Quality Gate') {
                       sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
                   }
               }
-             stage('OPA Conftest docker') {
-                 steps {
-                     script {
-                         def workspace = pwd()  // Groovy pwd() handles spaces safely
+            stage('OPA Conftest docker') {
+                steps {
+                    // Debug: confirm files are present
+                    sh '''
+                        pwd
+                        ls -l Dockerfile opa-docker-security.rego || echo "Files missing!"
+                    '''
 
-                         sh """
-                             docker run --rm \
-                                 -v "${workspace}":/project \
-                                 openpolicyagent/conftest:latest \
-                                 test --policy opa-docker-security.rego \
-                                 --exit-code 1 \
-                                 Dockerfile
-                         """
-                     }
-                 }
-             }
+                    // Use specific version with --exit-code support
+                    sh """
+                        docker run --rm \
+                            -v "\$(pwd)":/project \
+                            openpolicyagent/conftest:v0.58.0 \
+                            test --policy opa-docker-security.rego \
+                            --exit-code 1 \
+                            Dockerfile
+                    """
+                }
+            }
 //              stage('Docker Build and Push') {
 //                    steps {
 //                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
