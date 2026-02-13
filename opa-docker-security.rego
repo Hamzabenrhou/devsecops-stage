@@ -1,6 +1,7 @@
 package main
 
 import future.keywords.in
+import future.keywords.starts_with
 
 secrets_env := ["passwd", "password", "pass", "secret", "key", "access", "api_key", "apikey", "token", "tkn"]
 
