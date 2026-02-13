@@ -153,9 +153,8 @@ stage('Quality Gate') {
                    sh """
                        docker run --rm \
                            -v "\$(pwd)":/project \
-                           openpolicyagent/conftest:latest \
+                           openpolicyagent/conftest:v0.58.0 \
                            test --policy opa-docker-security.rego \
-                           --exit-code 1 \
                            Dockerfile
                    """
                }
