@@ -142,21 +142,17 @@ stage('Quality Gate') {
                     }
               stage('OPA Conftest docker') {
                                      steps {
-                                      sh '''
-                                                  pwd
-                                                  ls -l Dockerfile || echo "Dockerfile not found!"
-                                                  ls -la | grep -i "opa-docker-security.rego"
-                                              '''
-
-                                              // Run Conftest with proper volume mount
-                                              sh '''
-                                                  docker run --rm \
-                                                      -v $(pwd):/project \
-                                                      openpolicyagent/conftest:latest \
-                                                      test --policy opa-docker-security.rego \
-                                                      --exit-code 1 \
-                                                      Dockerfile
-                                              '''
+                                      script {
+                                                  def workspace = pwd()  // Groovy pwd() - always safe
+                                                  sh """
+                                                      docker run --rm \
+                                                          -v ${workspace}:/project \
+                                                          openpolicyagent/conftest:latest \
+                                                          test --policy opa-docker-security.rego \
+                                                          --exit-code 1 \
+                                                          Dockerfile
+                                                  """
+                                              }
                                      }
                                  }
 //              stage('Docker Build and Push') {
