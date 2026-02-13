@@ -154,14 +154,15 @@ stage('Quality Gate') {
                     '''
 
                     // Use specific version with --exit-code support
-                    sh """
-                        docker run --rm \
-                            -v "\$(pwd)":/project \
-                            openpolicyagent/conftest:v0.58.0 \
-                            test --policy opa-docker-security.rego \
-                            --exit-code 1 \
-                            Dockerfile
-                    """
+                   sh """
+                       docker pull openpolicyagent/conftest:v0.58.0
+                       docker run --rm \
+                           -v "\$(pwd)":/project \
+                           openpolicyagent/conftest:v0.58.0 \
+                           test --policy opa-docker-security.rego \
+                           --exit-code 1 \
+                           Dockerfile
+                   """
                 }
             }
 //              stage('Docker Build and Push') {
