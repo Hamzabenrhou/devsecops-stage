@@ -123,7 +123,7 @@ stage('Quality Gate') {
              echo "NVD API key loaded from Vault (length: ${NVD_API_KEY?.length() ?: 0})"
 
              // Run the check using the fetched key
-             sh 'mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY'
+             sh 'mvn dependency-check:check -DnvdApiKey=$NVD_API_KEY -U'
          }
      }
 
