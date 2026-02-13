@@ -14,23 +14,17 @@ secrets_env = [
     "tkn"
 ]
 
-deny contains msg if {
+deny[msg] {
     input[i].Cmd == "env"
-    val := input[i].Value
-    contains(lower(val[_]), secrets_env[_])
+    val := input[i].Value[_]
+    some secret
+    secret := secrets_env[_]
+    contains(lower(val), secret)
     msg := sprintf("Line %d: Potential secret in ENV key found: %s", [i, val])
 }
 
-# Only use trusted base images
-#deny contains msg if {
-#    input[i].Cmd == "from"
-#    val := split(input[i].Value[0], "/")
-#    count(val) > 1
-#    msg := sprintf("Line %d: use a trusted base image", [i])
-#}
-
 # Do not use 'latest' tag for base image
-deny contains msg if {
+deny[msg] {
     input[i].Cmd == "from"
     val := split(input[i].Value[0], ":")
     contains(lower(val[1]), "latest")
@@ -38,7 +32,7 @@ deny contains msg if {
 }
 
 # Avoid curl bashing
-deny contains msg if {
+deny[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
     matches := regex.find_n("(curl|wget)[^|^>]*[|>]", lower(val), -1)
@@ -47,7 +41,7 @@ deny contains msg if {
 }
 
 # Do not upgrade your system packages
-warn contains msg if {
+warn[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
     matches := regex.match(".*?(apk|yum|dnf|apt|pip).+?(install|[dist-|check-|group]?up[grade|date]).*", lower(val))
@@ -55,18 +49,13 @@ warn contains msg if {
     msg := sprintf("Line: %d: Do not upgrade your system packages: %s", [i, val])
 }
 
-# Do not use ADD if possible
-#deny contains msg if {
-#    input[i].Cmd == "add"
-#    msg := sprintf("Line %d: Use COPY instead of ADD", [i])
-#}
-
 # Any user...
-any_user if {
+any_user {
+    some i
     input[i].Cmd == "user"
 }
 
-deny contains msg if {
+deny[msg] {
     not any_user
     msg := "Do not run as root, use USER instead"
 }
@@ -77,17 +66,9 @@ forbidden_users = [
     "toor",
     "0"
 ]
-#
-#deny contains msg if {
-#    input[i].Cmd == "user"
-#    users := [name | input[j].Cmd == "user"; name := input[j].Value]
-#    lastuser := users[count(users)-1]
-#    contains(lower(lastuser[_]), forbidden_users[_])
-#    msg := sprintf("Line %d: Last USER directive (USER %s) is forbidden", [i, lastuser])
-#}
 
 # Do not sudo
-deny contains msg if {
+deny[msg] {
     input[i].Cmd == "run"
     val := concat(" ", input[i].Value)
     contains(lower(val), "sudo")
@@ -97,13 +78,8 @@ deny contains msg if {
 # Use multi-stage builds
 default multi_stage = false
 
-multi_stage = true if {
+multi_stage {
     input[i].Cmd == "copy"
     val := concat(" ", input[i].Flags)
     contains(lower(val), "--from=")
 }
-
-#deny contains msg if {
-#    not multi_stage
-#    msg := "You COPY, but do not appear to use multi-stage builds"
-#}
