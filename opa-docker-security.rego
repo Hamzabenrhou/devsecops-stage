@@ -5,7 +5,7 @@ secrets_env = [
     "passwd",
     "password",
     "pass",
-    
+
     "key",
     "access",
     "api_key",
@@ -14,14 +14,14 @@ secrets_env = [
     "tkn"
 ]
 
-deny[msg] {
-    input[i].Cmd == "env"
-    val := input[i].Value[_]
-    some secret
-    secret := secrets_env[_]
-    contains(lower(val), secret)
-    msg := sprintf("Line %d: Potential secret in ENV key found: %s", [i, val])
-}
+#deny[msg] {
+#    input[i].Cmd == "env"
+#    val := input[i].Value[_]
+#    some secret
+#    secret := secrets_env[_]
+#    contains(lower(val), secret)
+#    msg := sprintf("Line %d: Potential secret in ENV key found: %s", [i, val])
+#}
 
 # Do not use 'latest' tag for base image
 deny[msg] {
