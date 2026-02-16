@@ -299,15 +299,14 @@ stage('Kubernetes Deployment - DEV') {
                 ]
             ]
         ) {
-            // Write plain kubeconfig to temp file (no base64 decode)
+            // Write the kubeconfig from Vault to a temp file
             sh '''
                 echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                echo "Kubeconfig written to temp file (first 10 lines for debug):"
-                head -n 10 kubeconfig-temp.yaml
-                export KUBECONFIG=kubeconfig-temp.yaml
+                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
             '''
 
-            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+            // Use the temp kubeconfig (no credentialsId needed)
+            withKubeConfig([credentialsId: 'none']) {
                 sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
                 sh "kubectl apply -f k8s_deployment_service.yaml"
             }
@@ -338,10 +337,10 @@ stage('Kubernetes Deployment - Node.js') {
         ) {
             sh '''
                 echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                export KUBECONFIG=kubeconfig-temp.yaml
+                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
             '''
 
-            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+            withKubeConfig([credentialsId: 'none']) {
                 sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
                 sh "kubectl apply -f node-app/node-k8s.yaml"
             }
@@ -371,10 +370,10 @@ stage('Check Rollout Status') {
         ) {
             sh '''
                 echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                export KUBECONFIG=kubeconfig-temp.yaml
+                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
             '''
 
-            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+            withKubeConfig([credentialsId: 'none']) {
                 sh "kubectl rollout status deployment/devsecops"
             }
 
