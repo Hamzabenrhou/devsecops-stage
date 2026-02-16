@@ -9,7 +9,6 @@ pipeline {
       deploymentName = "devsecops"
       containerName = "devsecops-container"
       serviceName = "devsecops-svc"
-      imageName = "hamzabenrhouma/numeric-app:${GIT_COMMIT}"
       applicationURL = "http://104.197.188.180"
       applicationURI = "/increment/99"
 
@@ -188,8 +187,8 @@ stage('Docker Build and Push') {
 
             // Build and push
             sh '''
-                docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
-                docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+                docker build -t ham02br26/numeric-app:${GIT_COMMIT} .
+                docker push ham02br26/numeric-app:${GIT_COMMIT}
             '''
         }
     }
@@ -217,8 +216,8 @@ stage('Build & Push Spring Boot Image') {
         ) {
             sh '''
                 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
-                docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+                docker build -t ham02br26/numeric-app:${GIT_COMMIT} .
+                docker push ham02br26/numeric-app:${GIT_COMMIT}
             '''
         }
     }
@@ -247,8 +246,8 @@ stage('Build & Push Node.js Image') {
             ) {
                 sh '''
                     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                    docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
-                    docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
+                    docker build -t ham02br26/plusone-service:${GIT_COMMIT} .
+                    docker push ham02br26/plusone-service:${GIT_COMMIT}
                 '''
             }
         }
