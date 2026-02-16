@@ -376,16 +376,37 @@ stage('Kubernetes Deployment - DEV') {
                       }
                   }
               }
-              
-//               stage('OWASP-ZAP DAST') {
-//                          steps {
-//                              withKubeConfig([credentialsId: 'kubeconfig']) {
-//                                 withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-//                                     sh 'bash zap.sh'
-//                                                   }
-//                                               }
-//                                               }
-//                 }
+
+ stage('OWASP-ZAP DAST') {
+     steps {
+         withVault(
+             configuration: [
+                 vaultUrl: 'https://104.197.188.180:8200',
+                 vaultCredentialId: 'vault-jenkins-approle',
+                 skipSslVerification: true,
+                 prefixPath: 'secret'
+             ],
+             vaultSecrets: [
+                 [path: 'jenkins/dockerhub',
+                  engineVersion: 2,
+                  secretValues: [
+                      [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
+                      [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
+                  ]
+                 ]
+             ]
+         ) {
+             // Login to Docker using Vault credentials
+             sh '''
+                 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+             '''
+
+             // Run ZAP scan
+             sh 'bash zap.sh'
+         }
+     }
+ }
+
 //
 //
 //
@@ -407,13 +428,13 @@ stage('Kubernetes Deployment - DEV') {
                                     }
                }
 
-//   post{
-//     always{
-//         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
-//         sendNotifications currentBuild.result
-//     }
-//     }
-//
+  post{
+    always{
+        publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
+        sendNotifications currentBuild.result
+    }
+    }
+
 //
 
 //
