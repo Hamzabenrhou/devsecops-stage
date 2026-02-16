@@ -281,103 +281,175 @@ stage('Build & Push Node.js Image') {
 
                                      }
                                  }
-stage('Kubernetes Deployment - DEV') {
-    steps {
-        withVault(
-            configuration: [
-                vaultUrl: 'https://104.197.188.180:8200',
-                vaultCredentialId: 'vault-jenkins-approle',
-                skipSslVerification: true,
-                prefixPath: 'secret'
-            ],
-            vaultSecrets: [
-                [path: 'jenkins/kubeconfig',
-                 engineVersion: 2,
-                 secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
-                 ]
-                ]
-            ]
-        ) {
-            // Write the kubeconfig from Vault to a temp file
-            sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
-            '''
+pipeline {
+    agent any
 
-            // Use the temp kubeconfig (no credentialsId needed)
-            withKubeConfig([credentialsId: 'none']) {
-                sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
-                sh "kubectl apply -f k8s_deployment_service.yaml"
+    stages {
+        stage('Kubernetes Deployment - DEV') {
+            steps {
+                withVault(
+                    configuration: [
+                        vaultUrl: 'https://104.197.188.180:8200',
+                        vaultCredentialId: 'vault-jenkins-approle',
+                        skipSslVerification: true,
+                        prefixPath: 'secret'
+                    ],
+                    vaultSecrets: [
+                        [path: 'jenkins/k8s',
+                         engineVersion: 2,
+                         secretValues: [
+                             [vaultKey: 'token', envVar: 'KUBE_TOKEN'],
+                             [vaultKey: 'server', envVar: 'KUBE_SERVER'],
+                             [vaultKey: 'namespace', envVar: 'KUBE_NAMESPACE'],
+                             [vaultKey: 'ca_cert', envVar: 'KUBE_CA_BASE64']
+                         ]
+                        ]
+                    ]
+                ) {
+                    sh '''
+                        # Create minimal kubeconfig from Vault secrets
+                        cat <<EOF > kubeconfig-temp.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: $KUBE_SERVER
+    certificate-authority-data: $KUBE_CA_BASE64
+  name: k8s-cluster
+contexts:
+- context:
+    cluster: k8s-cluster
+    user: jenkins
+    namespace: $KUBE_NAMESPACE
+  name: jenkins-context
+current-context: jenkins-context
+kind: Config
+users:
+- name: jenkins
+  user:
+    token: $KUBE_TOKEN
+EOF
+
+                        export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
+                        echo "Kubeconfig created from Vault token"
+
+                        # Debug
+                        kubectl config current-context
+                        kubectl get ns || echo "kubectl test failed"
+                    '''
+
+                    // Your deployment steps
+                    sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+                    sh "kubectl --insecure-skip-tls-verify apply -f k8s_deployment_service.yaml"
+                }
+
+                // Cleanup
+                sh 'rm -f kubeconfig-temp.yaml || true'
             }
-
-            // Cleanup
-            sh 'rm -f kubeconfig-temp.yaml || true'
         }
-    }
-}
 
-stage('Kubernetes Deployment - Node.js') {
-    steps {
-        withVault(
-            configuration: [
-                vaultUrl: 'https://104.197.188.180:8200',
-                vaultCredentialId: 'vault-jenkins-approle',
-                skipSslVerification: true,
-                prefixPath: 'secret'
-            ],
-            vaultSecrets: [
-                [path: 'jenkins/kubeconfig',
-                 engineVersion: 2,
-                 secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
-                 ]
-                ]
-            ]
-        ) {
-            sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
-            '''
+        stage('Kubernetes Deployment - Node.js') {
+            steps {
+                withVault(
+                    configuration: [
+                        vaultUrl: 'https://104.197.188.180:8200',
+                        vaultCredentialId: 'vault-jenkins-approle',
+                        skipSslVerification: true,
+                        prefixPath: 'secret'
+                    ],
+                    vaultSecrets: [
+                        [path: 'jenkins/k8s',
+                         engineVersion: 2,
+                         secretValues: [
+                             [vaultKey: 'token', envVar: 'KUBE_TOKEN'],
+                             [vaultKey: 'server', envVar: 'KUBE_SERVER'],
+                             [vaultKey: 'namespace', envVar: 'KUBE_NAMESPACE'],
+                             [vaultKey: 'ca_cert', envVar: 'KUBE_CA_BASE64']
+                         ]
+                        ]
+                    ]
+                ) {
+                    sh '''
+                        cat <<EOF > kubeconfig-temp.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: $KUBE_SERVER
+    certificate-authority-data: $KUBE_CA_BASE64
+  name: k8s-cluster
+contexts:
+- context:
+    cluster: k8s-cluster
+    user: jenkins
+    namespace: $KUBE_NAMESPACE
+  name: jenkins-context
+current-context: jenkins-context
+kind: Config
+users:
+- name: jenkins
+  user:
+    token: $KUBE_TOKEN
+EOF
+                        export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
+                    '''
 
-            withKubeConfig([credentialsId: 'none']) {
-                sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
-                sh "kubectl apply -f node-app/node-k8s.yaml"
+                    sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
+                    sh "kubectl --insecure-skip-tls-verify apply -f node-app/node-k8s.yaml"
+                }
+
+                sh 'rm -f kubeconfig-temp.yaml || true'
             }
-
-            sh 'rm -f kubeconfig-temp.yaml || true'
         }
-    }
-}
 
-stage('Check Rollout Status') {
-    steps {
-        withVault(
-            configuration: [
-                vaultUrl: 'https://104.197.188.180:8200',
-                vaultCredentialId: 'vault-jenkins-approle',
-                skipSslVerification: true,
-                prefixPath: 'secret'
-            ],
-            vaultSecrets: [
-                [path: 'jenkins/kubeconfig',
-                 engineVersion: 2,
-                 secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
-                 ]
-                ]
-            ]
-        ) {
-            sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
-            '''
+        stage('Check Rollout Status') {
+            steps {
+                withVault(
+                    configuration: [
+                        vaultUrl: 'https://104.197.188.180:8200',
+                        vaultCredentialId: 'vault-jenkins-approle',
+                        skipSslVerification: true,
+                        prefixPath: 'secret'
+                    ],
+                    vaultSecrets: [
+                        [path: 'jenkins/k8s',
+                         engineVersion: 2,
+                         secretValues: [
+                             [vaultKey: 'token', envVar: 'KUBE_TOKEN'],
+                             [vaultKey: 'server', envVar: 'KUBE_SERVER'],
+                             [vaultKey: 'namespace', envVar: 'KUBE_NAMESPACE'],
+                             [vaultKey: 'ca_cert', envVar: 'KUBE_CA_BASE64']
+                         ]
+                        ]
+                    ]
+                ) {
+                    sh '''
+                        cat <<EOF > kubeconfig-temp.yaml
+apiVersion: v1
+clusters:
+- cluster:
+    server: $KUBE_SERVER
+    certificate-authority-data: $KUBE_CA_BASE64
+  name: k8s-cluster
+contexts:
+- context:
+    cluster: k8s-cluster
+    user: jenkins
+    namespace: $KUBE_NAMESPACE
+  name: jenkins-context
+current-context: jenkins-context
+kind: Config
+users:
+- name: jenkins
+  user:
+    token: $KUBE_TOKEN
+EOF
+                        export KUBECONFIG=$(pwd)/kubeconfig-temp.yaml
+                    '''
 
-            withKubeConfig([credentialsId: 'none']) {
-                sh "kubectl rollout status deployment/devsecops"
+                    sh "kubectl --insecure-skip-tls-verify rollout status deployment/devsecops"
+                }
+
+                sh 'rm -f kubeconfig-temp.yaml || true'
             }
-
-            sh 'rm -f kubeconfig-temp.yaml || true'
         }
     }
 }
