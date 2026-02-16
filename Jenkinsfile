@@ -377,57 +377,42 @@ stage('Kubernetes Deployment - DEV') {
                   }
               }
 
- stage('OWASP-ZAP DAST') {
-     steps {
-         withVault(
-             configuration: [
-                 vaultUrl: 'https://104.197.188.180:8200',
-                 vaultCredentialId: 'vault-jenkins-approle',
-                 skipSslVerification: true,
-                 prefixPath: 'secret'
-             ],
-             vaultSecrets: [
-                 [path: 'jenkins/dockerhub',
-                  engineVersion: 2,
-                  secretValues: [
-                      [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
-                      [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
-                  ]
+stage('OWASP-ZAP DAST') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/dockerhub',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
+                     [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
                  ]
-             ]
-         ) {
-             // Login to Docker using Vault credentials
-             sh '''
-                 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-             '''
+                ]
+            ]
+        ) {
+            sh '''
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
-             // Run ZAP scan
-             sh 'bash zap.sh'
-         }
-     }
- }
+                # Pull the ZAP image first
+                docker pull zaproxy/zap-weekly:latest
 
-//
-//
-//
-//
-//               stage('Kubernetes Deployment prod- DEV') {
-//                                 steps {
-//                                     withKubeConfig([credentialsId: 'kubeconfig']){
-//                                     sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s-prod-service.yaml"
-//                                     sh "kubectl -n prod apply -f k8s-prod-service.yaml"
-//                                   }
-//                                   }
-//                                 }
-//               stage('Check Rollout Status prod') {
-//                                        steps {
-//                                            withKubeConfig([credentialsId: 'kubeconfig']) {
-//                                                sh "kubectl -n prod rollout status deployment/devsecops"
-//                                            }
-//                                        }
-                                    }
-               }
+                # Run ZAP scan with environment variables
+                export serviceName=${serviceName}
+                export applicationURL=${applicationURL}
+                export applicationURI=${applicationURI}
 
+                bash zap.sh
+            '''
+        }
+    }
+}
+}}
   post{
     always{
         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
