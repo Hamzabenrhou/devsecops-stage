@@ -294,25 +294,27 @@ stage('Kubernetes Deployment - DEV') {
                 [path: 'jenkins/kubeconfig',
                  engineVersion: 2,
                  secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
                  ]
                 ]
             ]
         ) {
-            // Write plain kubeconfig to temp file (no base64 decode)
+            // Decode base64 kubeconfig and write to temp file
             sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
-                echo "Kubeconfig written to temp file (first 10 lines for debug):"
-                head -n 10 kubeconfig-temp.yaml
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
                 export KUBECONFIG=kubeconfig-temp.yaml
             '''
 
+            // Now use the temp kubeconfig
             withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+                // Replace image tag
                 sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+
+                // Apply
                 sh "kubectl apply -f k8s_deployment_service.yaml"
             }
 
-            // Cleanup
+            // Cleanup temp file (security)
             sh 'rm -f kubeconfig-temp.yaml || true'
         }
     }
@@ -331,13 +333,13 @@ stage('Kubernetes Deployment - Node.js') {
                 [path: 'jenkins/kubeconfig',
                  engineVersion: 2,
                  secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
                  ]
                 ]
             ]
         ) {
             sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
                 export KUBECONFIG=kubeconfig-temp.yaml
             '''
 
@@ -364,13 +366,13 @@ stage('Check Rollout Status') {
                 [path: 'jenkins/kubeconfig',
                  engineVersion: 2,
                  secretValues: [
-                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_CONTENT']
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
                  ]
                 ]
             ]
         ) {
             sh '''
-                echo "$KUBECONFIG_CONTENT" > kubeconfig-temp.yaml
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
                 export KUBECONFIG=kubeconfig-temp.yaml
             '''
 
