@@ -262,7 +262,16 @@ stage('Build & Push Node.js Image') {
                                  }
              stage('OPA Conftest k8s') {
                                                   steps {
-                                                    sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml '
+                                                     sh 'docker pull openpolicyagent/conftest:latest || true'
+                                                                       sh 'docker run --rm openpolicyagent/conftest:latest --version'  // debug: print version
+
+                                                     sh """
+                                                                           docker run --rm \
+                                                                               -v "\$(pwd)":/project \
+                                                                               openpolicyagent/conftest:v0.58.0 \
+                                                                               test --policy opa-k8s-security.rego \
+                                                                               k8s_deployment_service.yaml
+                                                                       """
 
                                                   }
                                               }
