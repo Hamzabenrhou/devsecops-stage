@@ -281,30 +281,109 @@ stage('Build & Push Node.js Image') {
 
                                      }
                                  }
-//              stage('Kubernetes Deployment - DEV') {
-//                    steps {
-//                        withKubeConfig([credentialsId: 'kubeconfig']){
-//                        sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
-//                        sh "kubectl apply -f k8s_deployment_service.yaml"
-//                      }
-//                      }
-//                    }
-//              stage('Kubernetes Deployment - Node.js') {
-//                steps {
-//                  withKubeConfig([credentialsId: 'kubeconfig']) {
-//                    sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
-//                    sh "kubectl apply -f node-app/node-k8s.yaml"
-//                  }
-//                }
-//              }
-//
-//              stage('Check Rollout Status') {
-//                          steps {
-//                              withKubeConfig([credentialsId: 'kubeconfig']) {
-//                                  sh "kubectl rollout status deployment/devsecops"
-//                              }
-//                          }
-//                      }
+stage('Kubernetes Deployment - DEV') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/kubeconfig',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
+                 ]
+                ]
+            ]
+        ) {
+            // Decode base64 kubeconfig and write to temp file
+            sh '''
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
+                export KUBECONFIG=kubeconfig-temp.yaml
+            '''
+
+            // Now use the temp kubeconfig
+            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+                // Replace image tag
+                sh "sed -i 's#replace#hamzabenrhouma/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml"
+
+                // Apply
+                sh "kubectl apply -f k8s_deployment_service.yaml"
+            }
+
+            // Cleanup temp file (security)
+            sh 'rm -f kubeconfig-temp.yaml || true'
+        }
+    }
+}
+
+stage('Kubernetes Deployment - Node.js') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/kubeconfig',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
+                 ]
+                ]
+            ]
+        ) {
+            sh '''
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
+                export KUBECONFIG=kubeconfig-temp.yaml
+            '''
+
+            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+                sh "sed -i 's#latest#${GIT_COMMIT}#g' node-app/node-k8s.yaml"
+                sh "kubectl apply -f node-app/node-k8s.yaml"
+            }
+
+            sh 'rm -f kubeconfig-temp.yaml || true'
+        }
+    }
+}
+
+stage('Check Rollout Status') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/kubeconfig',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'kubeconfig_content', envVar: 'KUBECONFIG_BASE64']
+                 ]
+                ]
+            ]
+        ) {
+            sh '''
+                echo "$KUBECONFIG_BASE64" | base64 -d > kubeconfig-temp.yaml
+                export KUBECONFIG=kubeconfig-temp.yaml
+            '''
+
+            withKubeConfig([credentialsId: 'none', serverUrl: '', namespace: 'default']) {
+                sh "kubectl rollout status deployment/devsecops"
+            }
+
+            sh 'rm -f kubeconfig-temp.yaml || true'
+        }
+    }
+}
 //               stage('OWASP-ZAP DAST') {
 //                          steps {
 //                              withKubeConfig([credentialsId: 'kubeconfig']) {
