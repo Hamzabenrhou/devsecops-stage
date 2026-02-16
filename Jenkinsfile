@@ -159,42 +159,101 @@ stage('Quality Gate') {
                    """
                }
            }
-//              stage('Docker Build and Push') {
-//                    steps {
-//                        withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-//                                            sh 'printenv' // For debugging
-//                                            sh 'docker build -t ""hamzabenrhouma/numeric-app:$GIT_COMMIT"" .'
-//                                            sh 'docker push ""hamzabenrhouma/numeric-app:$GIT_COMMIT""'
-//                      }
-//                      }
-//                   }
-//              // SPRING BOOT IMAGE BUILD + PUSH
-//              stage('Build & Push Spring Boot Image') {
-//                steps {
-//
-//                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-//                      sh """
-//                        docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
-//                        docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
-//                      """
-//
-//                  }
-//                }
-//              }
-//
-//
-//              stage('Build & Push Node.js Image') {
-//                steps {
-//                  dir('node-app') {
-//                    withDockerRegistry(credentialsId: 'docker-hub', url: '') {
-//                      sh """
-//                        docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
-//                        docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
-//                      """
-//                    }
-//                  }
-//                }
-//              }
+stage('Docker Build and Push') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/dockerhub',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
+                     [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
+                 ]
+                ]
+            ]
+        ) {
+            // Debug (optional - remove later)
+            sh 'echo "Docker credentials loaded from Vault"'
+
+            // Login to Docker Hub
+            sh '''
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            '''
+
+            // Build and push
+            sh '''
+                docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
+                docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+            '''
+        }
+    }
+}
+
+// For Spring Boot image (same pattern)
+stage('Build & Push Spring Boot Image') {
+    steps {
+        withVault(
+            configuration: [
+                vaultUrl: 'https://104.197.188.180:8200',
+                vaultCredentialId: 'vault-jenkins-approle',
+                skipSslVerification: true,
+                prefixPath: 'secret'
+            ],
+            vaultSecrets: [
+                [path: 'jenkins/dockerhub',
+                 engineVersion: 2,
+                 secretValues: [
+                     [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
+                     [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
+                 ]
+                ]
+            ]
+        ) {
+            sh '''
+                echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                docker build -t hamzabenrhouma/numeric-app:${GIT_COMMIT} .
+                docker push hamzabenrhouma/numeric-app:${GIT_COMMIT}
+            '''
+        }
+    }
+}
+
+// For Node.js image (same)
+stage('Build & Push Node.js Image') {
+    steps {
+        dir('node-app') {
+            withVault(
+                configuration: [
+                    vaultUrl: 'https://104.197.188.180:8200',
+                    vaultCredentialId: 'vault-jenkins-approle',
+                    skipSslVerification: true,
+                    prefixPath: 'secret'
+                ],
+                vaultSecrets: [
+                    [path: 'jenkins/dockerhub',
+                     engineVersion: 2,
+                     secretValues: [
+                         [vaultKey: 'username', envVar: 'DOCKER_USERNAME'],
+                         [vaultKey: 'access_token', envVar: 'DOCKER_PASSWORD']
+                     ]
+                    ]
+                ]
+            ) {
+                sh '''
+                    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                    docker build -t hamzabenrhouma/plusone-service:${GIT_COMMIT} .
+                    docker push hamzabenrhouma/plusone-service:${GIT_COMMIT}
+                '''
+            }
+        }
+    }
+}
 //
 //              stage('kubesec') {
 //                                      steps {
