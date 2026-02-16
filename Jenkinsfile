@@ -412,20 +412,7 @@ stage('OWASP-ZAP DAST') {
         }
     }
 
-    post {
-        always {
-            // Always publish the report even if scan had issues
-            publishHTML([
-                allowMissing: true,
-                alwaysLinkToLastBuild: true,
-                keepAll: true,
-                reportDir: 'owasp-zap-report',
-                reportFiles: 'zap_report.html',
-                reportName: 'OWASP ZAP HTML Report',
-                reportTitles: 'OWASP ZAP Security Scan'
-            ])
-        }
-    }
+    
 }
   }
 
