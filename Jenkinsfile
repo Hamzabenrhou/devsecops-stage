@@ -11,7 +11,6 @@ pipeline {
       serviceName = "devsecops-svc"
       applicationURL = "http://104.197.188.180"
       applicationURI = "/increment/99"
-
     }
 
 
@@ -411,25 +410,29 @@ stage('OWASP-ZAP DAST') {
                 bash zap.sh || true
             '''
         }
-}}
-        // Always publish the report even if scan had issues
-        publishHTML([
-            allowMissing: true,
-            alwaysLinkToLastBuild: true,
-            keepAll: true,
-            reportDir: 'owasp-zap-report',
-            reportFiles: 'zap_report.html',
-            reportName: 'OWASP ZAP HTML Report',
-            reportTitles: 'OWASP ZAP Security Scan'
-        ])
+    }
+
+    post {
+        always {
+            // Always publish the report even if scan had issues
+            publishHTML([
+                allowMissing: true,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'owasp-zap-report',
+                reportFiles: 'zap_report.html',
+                reportName: 'OWASP ZAP HTML Report',
+                reportTitles: 'OWASP ZAP Security Scan'
+            ])
+        }
     }
 }
-//
+  }
 
-//
-//
-//              }
-
-
-
-
+  post{
+    always{
+        publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
+        sendNotifications currentBuild.result
+    }
+    }
+}
