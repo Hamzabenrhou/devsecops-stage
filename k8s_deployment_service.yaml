@@ -18,8 +18,24 @@ spec:
       containers:
       - image: replace
         name: devsecops-container
+        volumeMounts:
+          - mountPath: /tmp
+            name: vol
         securityContext:
+          capabilities:
+            drop:
+              - NET_RAW
+          runAsUser: 100
           runAsNonRoot: true
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
 
 ---
 apiVersion: v1
