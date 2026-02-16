@@ -411,7 +411,7 @@ stage('OWASP-ZAP DAST') {
                 bash zap.sh || true
             '''
         }
-
+}}
         // Always publish the report even if scan had issues
         publishHTML([
             allowMissing: true,
