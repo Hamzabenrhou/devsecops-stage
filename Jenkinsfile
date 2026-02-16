@@ -253,25 +253,25 @@ stage('Build & Push Node.js Image') {
         }
     }
 }
-//
-//              stage('kubesec') {
-//                                      steps {
-//                                        sh "bash kubesec-scan.sh"
-//
-//                                      }
-//                                  }
-//              stage('OPA Conftest k8s') {
-//                                                   steps {
-//                                                     sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml '
-//
-//                                                   }
-//                                               }
-// //               stage('Trivy scan k8s') {
-// //                                      steps {
-// //                                        sh "bash trivy-k8s.sh"
-// //
-// //                                      }
-// //                                  }
+
+             stage('kubesec') {
+                                     steps {
+                                       sh "bash kubesec-scan.sh"
+
+                                     }
+                                 }
+             stage('OPA Conftest k8s') {
+                                                  steps {
+                                                    sh 'docker run --rm -v \$(pwd):/project  openpolicyagent/conftest test --policy opa-k8s-security.rego k8s_deployment_service.yaml '
+
+                                                  }
+                                              }
+              stage('Trivy scan k8s') {
+                                     steps {
+                                       sh "bash trivy-k8s.sh"
+
+                                     }
+                                 }
 //              stage('Kubernetes Deployment - DEV') {
 //                    steps {
 //                        withKubeConfig([credentialsId: 'kubeconfig']){
