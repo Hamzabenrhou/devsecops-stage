@@ -422,5 +422,53 @@ stage('OWASP-ZAP DAST') {
         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
 
     }
+    failure {
+            script {
+                def failureTool = "unknown"
+                def details = ""
+
+                // Detect which tool caused the failure
+                if (currentBuild.rawBuild.getLog(200).join('\n').contains("Quality gate")) {
+                    failureTool = "sonar"
+                    def qg = waitForQualityGate()  // re-check if needed
+                    details = """
+                    Status: ${qg.status}
+                    Failed conditions: ${qg.conditions?.collect { "${it.metric} ${it.status}" }?.join(', ')}
+                    """
+                }
+                else if (currentBuild.rawBuild.getLog(200).join('\n').contains("zap") || currentBuild.rawBuild.getLog(200).join('\n').contains("ZAP")) {
+                    failureTool = "zap"
+                    // Read ZAP report if you saved it
+                    def zapReport = readFile(file: 'zap_report.json', encoding: 'UTF-8') ?: "No report found"
+                    details = "High severity issues found in OWASP ZAP scan"
+                }
+                else if (currentBuild.rawBuild.getLog(200).join('\n').contains("conftest") || currentBuild.rawBuild.getLog(200).join('\n').contains("violation")) {
+                    failureTool = "conftest"
+                    def conftestOutput = sh(script: "cat conftest-report.json || echo 'No report'", returnStdout: true).trim()
+                    details = conftestOutput
+                }
+
+                def payload = [
+                    tool: failureTool,
+                    job_name: env.JOB_NAME,
+                    build_number: env.BUILD_NUMBER,
+                    build_url: env.BUILD_URL,
+                    branch: env.GIT_BRANCH,
+                    commit: env.GIT_COMMIT,
+                    timestamp: new Date().toISOString(),
+                    details: details,
+                    console_log_snippet: currentBuild.rawBuild.getLog(100).join('\n')  // last 100 lines
+                ]
+
+                httpRequest(
+                    url: 'http://localhost:5678/webhook/jenkins-failure',   // ← your n8n webhook
+                    httpMode: 'POST',
+                    contentType: 'APPLICATION_JSON',
+                    requestBody: groovy.json.JsonOutput.toJson(payload),
+                    ignoreSslErrors: true
+                )
+            }
+        }
+
     }
 }
