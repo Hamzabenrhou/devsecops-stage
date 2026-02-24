@@ -461,7 +461,7 @@ stage('OWASP-ZAP DAST') {
                 ]
 
                 httpRequest(
-                    url: 'http://localhost:5678/webhook-test/jenkins-failure',   // ← your n8n webhook
+                    url: 'http://104.197.188.180:5678/webhook-test/jenkins-failure',   // ← your n8n webhook
                     httpMode: 'POST',
                     contentType: 'APPLICATION_JSON',
                     requestBody: groovy.json.JsonOutput.toJson(payload),
