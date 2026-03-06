@@ -24,20 +24,20 @@ FULL_URL="${applicationURL}:${PORT}${applicationURI}"
 echo "Scanning: $FULL_URL"
 
 # Run ZAP scan with the correct image and permissions
-echo "Running ZAP baseline scan..."
-set +e  # Temporarily disable exit on error
+# Run ZAP FULL scan (includes Active Attack phase)
+echo "Running ZAP full scan..."
+set +e
 docker run --rm \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
     --user root \
     zaproxy/zap-weekly:latest \
-    zap-baseline.py \
+    zap-full-scan.py \
     -t "$FULL_URL" \
     -r zap_report.html \
     -J zap_report.json \
     -I
-
 ZAP_EXIT_CODE=$?
-set -e  # Re-enable exit on error
+set -e # Re-enable exit on error
 
 echo "ZAP exit code: $ZAP_EXIT_CODE"
 
