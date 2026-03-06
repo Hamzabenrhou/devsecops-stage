@@ -32,7 +32,7 @@ docker run --rm \
     --user root \
     zaproxy/zap-stable:latest \
     zap-api-scan.py \
-    -t "$FULL_URL" \
+    -t "${applicationURL}:${PORT}/v3/api-docs" \
     -f openapi \
     -r zap_report.html \
     -J zap_report.json
