@@ -20,8 +20,16 @@ chmod 777 zap/wrk 2>/dev/null || true
 chmod 777 owasp-zap-report 2>/dev/null || true
 
 # Full URL
-FULL_URL="${applicationURL}:${PORT}/check?name=test"
-echo "Scanning: $FULL_URL"
+echo "Found NodePort: $PORT"
+FULL_URL="http://${applicationURL}:${PORT}" # Ensure http:// is present
+
+# CRITICAL: Wait for Spring Boot to actually start
+echo "Waiting 30 seconds for Spring Boot..."
+sleep 30
+
+# Verify the endpoint is alive and vulnerable
+echo "Testing connectivity to /check..."
+curl -I "${FULL_URL}/check?name=test" || echo "CANNOT REACH APP"
 
 # Run ZAP scan with the correct image and permissions
 # Run ZAP FULL scan (includes Active Attack phase)
@@ -31,11 +39,12 @@ docker run --rm \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
     --user root \
     zaproxy/zap-stable:latest \
-    zap-api-scan.py \
-    -t "${applicationURL}:${PORT}/v3/api-docs" \
-    -f openapi \
+    zap-full-scan.py \
+    -t "$FULL_URL/check?name=test" \
     -r zap_report.html \
-    -J zap_report.json
+    -J zap_report.json \
+    -z "-config scanner.attackOnStart=true" \
+    -I
 ZAP_EXIT_CODE=$?
 set -e # Re-enable exit on error
 
