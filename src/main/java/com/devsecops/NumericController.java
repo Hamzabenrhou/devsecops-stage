@@ -19,7 +19,11 @@ public class NumericController {
 
 	@GetMapping("/")
 	public String welcome() {
-		return "Kubernetes DevSecOps";
+		// Adding a link so the ZAP Spider can find the vulnerability
+		return "<html><body>" +
+				"<h1>Kubernetes DevSecOps</h1>" +
+				"<a href='/check?name=test'>Click here to check status</a>" +
+				"</body></html>";
 	}
 
 	// --- THE PROBLEM START ---
