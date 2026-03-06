@@ -43,7 +43,6 @@ docker run --rm \
     -t "$FULL_URL/check?name=test" \
     -r zap_report.html \
     -J zap_report.json \
-    -z "-config scanner.attackOnStart=true" \
     -I
 ZAP_EXIT_CODE=$?
 set -e # Re-enable exit on error
