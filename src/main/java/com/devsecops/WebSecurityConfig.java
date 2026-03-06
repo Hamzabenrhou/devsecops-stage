@@ -9,16 +9,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.headers().contentSecurityPolicy("script-src 'unsafe-inline'").and()
-                .xssProtection().disable();
         http
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/**").permitAll() // Ensure ZAP can reach /check
+                .antMatchers("/**").permitAll()
                 .and()
                 .headers()
-                .xssProtection().disable()      // DISABLE XSS Protection
-                .contentSecurityPolicy("script-src 'unsafe-inline'").and() // Allow scripts
-                .frameOptions().disable();      // Allow ZAP to wrap the page if needed
+                .xssProtection().disable() // Essential for ZAP to report 'High'
+                .contentSecurityPolicy("script-src 'unsafe-inline'").and() // Allows XSS execution
+                .frameOptions().disable();
     }
 }
