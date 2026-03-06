@@ -6,64 +6,52 @@ PORT=$(kubectl -n default get svc ${serviceName} -o json | jq -r '.spec.ports[].
 if [ -z "$PORT" ] || [ "$PORT" = "null" ]; then
     echo "ERROR: Could not get NodePort"
     kubectl -n default get svc
-    exit 0  # Changed from exit 1 to exit 0
+    exit 0
 fi
 
 echo "Found NodePort: $PORT"
 
-# Create directories with full permissions
+# Setup directories
 mkdir -p owasp-zap-report
 mkdir -p zap/wrk
-
-# Set full permissions on the directory
 chmod 777 zap/wrk 2>/dev/null || true
 chmod 777 owasp-zap-report 2>/dev/null || true
 
-# Full URL
-echo "Found NodePort: $PORT"
-# Correct way to define the URL
-FULL_URL="http://${applicationURL}:${PORT}"
+# Construct the URL properly
+# Ensure applicationURL starts with http:// (e.g., http://104.197.188.180)
+FULL_URL="${applicationURL}:${PORT}"
 
-# Correct way to curl (use double quotes)
-curl -I "${FULL_URL}/check?name=test"
+echo "Testing connectivity to: ${FULL_URL}/check?name=test"
+# Using -L to follow redirects if they exist
+curl -IsL "${FULL_URL}/check?name=test" || echo "Warning: Could not reach endpoint via curl"
 
-# Run ZAP scan with the correct image and permissions
-# Run ZAP FULL scan (includes Active Attack phase)
-echo "Running ZAP full scan..."
+# Run ZAP Full Scan
+# Targeting the specific endpoint forces ZAP to attack the 'name' parameter
+echo "Running ZAP full scan on targeted endpoint..."
 set +e
 docker run --rm \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
     --user root \
     zaproxy/zap-stable:latest \
     zap-full-scan.py \
-    -t "$FULL_URL/check?name=test" \
+    -t "${FULL_URL}/check?name=test" \
     -r zap_report.html \
     -J zap_report.json \
     -I
 ZAP_EXIT_CODE=$?
-set -e # Re-enable exit on error
+set -e
 
 echo "ZAP exit code: $ZAP_EXIT_CODE"
 
-# Check if report was generated
+# Move and cleanup reports
 if [ -f "zap/wrk/zap_report.html" ]; then
-    echo "Report generated successfully"
     cp zap/wrk/zap_report.html owasp-zap-report/
-    chmod 644 owasp-zap-report/zap_report.html 2>/dev/null || true
-    echo "Report saved to owasp-zap-report/zap_report.html"
     cp zap/wrk/zap_report.json owasp-zap-report/
-    chmod 644 owasp-zap-report/zap_report.json
-    # Show a quick summary
     echo "=== ZAP Scan Summary ==="
-    grep -E "High|Medium|Low" zap/wrk/zap_report.html 2>/dev/null || echo "No risk levels found in report"
+    # This will grep for the High risk alert in the HTML report
+    grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found Yet"
 else
-    echo "Warning: Report not generated"
-    # Create a placeholder report
-    echo "<html><body><h1>ZAP Scan Failed</h1><p>Could not generate report. Check logs.</p></body></html>" > owasp-zap-report/zap_report.html
+    echo "Error: ZAP Report generation failed."
 fi
 
-# Show directory contents for debugging
-ls -la owasp-zap-report/ || true
-
-# Always exit successfully
 exit 0

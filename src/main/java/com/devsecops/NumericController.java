@@ -19,19 +19,19 @@ public class NumericController {
 
 	@GetMapping("/")
 	public String welcome() {
-		// This link tells the ZAP spider: "Go here and test this parameter!"
+		// Link helps the ZAP spider discover the vulnerable endpoint automatically
 		return "<html><body>" +
 				"<h1>Kubernetes DevSecOps</h1>" +
 				"<a href='/check?name=DevSecOpsUser'>Run Security Check</a>" +
 				"</body></html>";
 	}
-	// --- THE PROBLEM START ---
-	@GetMapping(value = "/check", produces = "text/html") // Force HTML header
+
+	// --- THE VULNERABILITY ---
+	// 'produces = "text/html"' is critical to trigger High Risk XSS in ZAP
+	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
-		// Wrap it in HTML tags so ZAP sees it as a webpage, not a raw string
 		return "<html><body><h1>Hello " + name + "</h1></body></html>";
 	}
-	// --- THE PROBLEM END ---
 
 	@GetMapping("/compare/{value}")
 	public String compareToFifty(@PathVariable int value) {
