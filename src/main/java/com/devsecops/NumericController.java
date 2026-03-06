@@ -24,11 +24,9 @@ public class NumericController {
 
 	// --- THE PROBLEM START ---
 	@GetMapping("/check")
-	public String check(@RequestParam(value = "name", defaultValue = "Guest") String name) {
-		// VULNERABILITY: Reflected XSS
-		// ZAP will inject <script>alert(1)</script> into the 'name' parameter.
-		// Because we return it directly, the script executes in the browser.
-		return "Hello " + name + ", welcome to our secure app!";
+	public String check(@RequestParam(value = "name") String name) {
+		// This is the vulnerable line. No escaping = High Risk XSS.
+		return "<html><body><h1>Hello " + name + "</h1></body></html>";
 	}
 	// --- THE PROBLEM END ---
 
