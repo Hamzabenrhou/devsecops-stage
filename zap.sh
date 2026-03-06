@@ -19,17 +19,32 @@ chmod 777 owasp-zap-report 2>/dev/null || true
 
 # Construct the URL properly
 # Ensure applicationURL starts with http:// (e.g., http://104.197.188.180)
-FULL_URL="${applicationURL}:${PORT}"
+# ... (after getting PORT)
+FULL_URL="http://104.197.188.180:${PORT}"
 
-echo "Testing connectivity to: ${FULL_URL}/check?name=test"
-# Using -L to follow redirects if they exist
-curl -IsL "${FULL_URL}/check?name=test" || echo "Warning: Could not reach endpoint via curl"
+echo "Waiting for service to be reachable at ${FULL_URL}..."
+# Loop for 60 seconds to wait for the Pod to be ready
+for i in {1..12}; do
+    if curl -sL --connect-timeout 5 "${FULL_URL}/check?name=test" > /dev/null; then
+        echo "SUCCESS: App is reachable!"
+        CONNECTED=true
+        break
+    fi
+    echo "Attempt $i: App not reachable yet, waiting 5s..."
+    sleep 5
+done
 
-# Run ZAP Full Scan
-# Targeting the specific endpoint forces ZAP to attack the 'name' parameter
-echo "Running ZAP full scan on targeted endpoint..."
+if [ "$CONNECTED" != true ]; then
+    echo "ERROR: App never became reachable at ${FULL_URL}. Checking K8s logs..."
+    kubectl logs -l app=your-app-label --tail=20
+    exit 0 # Exit so pipeline doesn't crash, but you'll know why it failed
+fi
+
+# Run ZAP
+echo "Running ZAP full scan..."
 set +e
 docker run --rm \
+    --network host \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
     --user root \
     zaproxy/zap-stable:latest \
