@@ -21,15 +21,11 @@ chmod 777 owasp-zap-report 2>/dev/null || true
 
 # Full URL
 echo "Found NodePort: $PORT"
-FULL_URL="http://${applicationURL}:${PORT}" # Ensure http:// is present
+# Correct way to define the URL
+FULL_URL="http://${applicationURL}:${PORT}"
 
-# CRITICAL: Wait for Spring Boot to actually start
-echo "Waiting 30 seconds for Spring Boot..."
-sleep 30
-
-# Verify the endpoint is alive and vulnerable
-echo "Testing connectivity to /check..."
-curl -I "${FULL_URL}/check?name=test" || echo "CANNOT REACH APP"
+# Correct way to curl (use double quotes)
+curl -I "${FULL_URL}/check?name=test"
 
 # Run ZAP scan with the correct image and permissions
 # Run ZAP FULL scan (includes Active Attack phase)

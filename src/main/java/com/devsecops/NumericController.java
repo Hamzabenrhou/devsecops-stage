@@ -26,9 +26,9 @@ public class NumericController {
 				"</body></html>";
 	}
 	// --- THE PROBLEM START ---
-	@GetMapping("/check")
+	@GetMapping(value = "/check", produces = "text/html") // Force HTML header
 	public String check(@RequestParam(value = "name") String name) {
-		// This is the vulnerable line. No escaping = High Risk XSS.
+		// Wrap it in HTML tags so ZAP sees it as a webpage, not a raw string
 		return "<html><body><h1>Hello " + name + "</h1></body></html>";
 	}
 	// --- THE PROBLEM END ---
