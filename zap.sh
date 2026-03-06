@@ -20,7 +20,7 @@ chmod 777 zap/wrk 2>/dev/null || true
 chmod 777 owasp-zap-report 2>/dev/null || true
 
 # Full URL
-FULL_URL="${applicationURL}:${PORT}${applicationURI}"
+FULL_URL="${applicationURL}:${PORT}/check?name=test"
 echo "Scanning: $FULL_URL"
 
 # Run ZAP scan with the correct image and permissions
@@ -30,13 +30,12 @@ set +e
 docker run --rm \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
     --user root \
-    zaproxy/zap-weekly:latest \
-    zap-full-scan.py \
+    zaproxy/zap-stable:latest \
+    zap-api-scan.py \
     -t "$FULL_URL" \
+    -f openapi \
     -r zap_report.html \
-    -J zap_report.json \
-    -j \
-    -I
+    -J zap_report.json
 ZAP_EXIT_CODE=$?
 set -e # Re-enable exit on error
 

@@ -19,13 +19,12 @@ public class NumericController {
 
 	@GetMapping("/")
 	public String welcome() {
-		// Adding a link so the ZAP Spider can find the vulnerability
+		// This link tells the ZAP spider: "Go here and test this parameter!"
 		return "<html><body>" +
 				"<h1>Kubernetes DevSecOps</h1>" +
-				"<a href='/check?name=test'>Click here to check status</a>" +
+				"<a href='/check?name=DevSecOpsUser'>Run Security Check</a>" +
 				"</body></html>";
 	}
-
 	// --- THE PROBLEM START ---
 	@GetMapping("/check")
 	public String check(@RequestParam(value = "name") String name) {
