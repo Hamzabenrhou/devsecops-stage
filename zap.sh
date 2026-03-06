@@ -33,6 +33,7 @@ docker run --rm \
     zap-baseline.py \
     -t "$FULL_URL" \
     -r zap_report.html \
+    -J zap_report.json \
     -I
 
 ZAP_EXIT_CODE=$?
@@ -46,7 +47,8 @@ if [ -f "zap/wrk/zap_report.html" ]; then
     cp zap/wrk/zap_report.html owasp-zap-report/
     chmod 644 owasp-zap-report/zap_report.html 2>/dev/null || true
     echo "Report saved to owasp-zap-report/zap_report.html"
-
+    cp zap/wrk/zap_report.json owasp-zap-report/
+    chmod 644 owasp-zap-report/zap_report.json
     # Show a quick summary
     echo "=== ZAP Scan Summary ==="
     grep -E "High|Medium|Low" zap/wrk/zap_report.html 2>/dev/null || echo "No risk levels found in report"
