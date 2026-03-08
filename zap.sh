@@ -63,6 +63,23 @@ if [ -f "zap/wrk/zap_report.html" ]; then
     cp zap/wrk/zap_report.html owasp-zap-report/
     cp zap/wrk/zap_report.json owasp-zap-report/
     echo "=== ZAP Scan Summary ==="
+    # This takes the multi-line ZAP report and turns it into a single line for Wazuh
+    # Move and cleanup reports
+    if [ -f "zap/wrk/zap_report.json" ]; then
+        # 1. Minify the JSON directly in the folder Wazuh is watching
+        cat "zap/wrk/zap_report.json" | jq -c . > "zap/wrk/zap_report.min.json"
+
+        # 2. Overwrite the original with the minified one
+        mv "zap/wrk/zap_report.min.json" "zap/wrk/zap_report.json"
+
+        # 3. Copy to your other report folder for backup/Jenkins artifacts
+        cp "zap/wrk/zap_report.json" owasp-zap-report/
+        cp "zap/wrk/zap_report.html" owasp-zap-report/
+
+        echo "=== ZAP Scan Summary: JSON Minified for Wazuh ==="
+    else
+        echo "Error: ZAP Report generation failed."
+    fi
     # This will grep for the High risk alert in the HTML report
     grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found Yet"
 else

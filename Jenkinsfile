@@ -409,6 +409,7 @@ stage('OWASP-ZAP DAST') {
 
                 # Run the scan (script will handle errors)
                 bash zap.sh || true
+
             '''
         }
     }
