@@ -67,27 +67,21 @@ if [ -f "zap/wrk/zap_report.html" ]; then
     # Move and cleanup reports
     # Move and cleanup reports
     if [ -f "zap/wrk/zap_report.json" ]; then
-        echo "=== Processing ZAP Report for Wazuh ==="
+        echo "=== Cleaning ZAP JSON for Wazuh ==="
 
-        # 1. Filter AND Minify in one command
-        # This keeps only the Alert Name, Risk Code, URL, and Payload
-        cat "zap/wrk/zap_report.json" | jq -c '{
-          alerts: [.site[].alerts[] | {alert: .alert, risk: .riskcode, uri: .instances[0].uri, attack: .instances[0].attack}]
-        }' > "zap/wrk/zap_report.min.json"
+        # We are selecting ONLY High Risk (3) and keeping ONLY the name and URI.
+        # This reduces the size by 99%.
+        cat zap/wrk/zap_report.json | jq -c '{
+          high_alerts: [.site[].alerts[] | select(.riskcode == "3") | {a: .alert, u: .instances[0].uri}]
+        }' > zap/wrk/zap_report.min.json
 
-        # 2. Overwrite the original with the small version
-        mv "zap/wrk/zap_report.min.json" "zap/wrk/zap_report.json"
+        # Overwrite the file Wazuh is watching
+        mv zap/wrk/zap_report.min.json zap/wrk/zap_report.json
+        chmod 644 zap/wrk/zap_report.json
 
-        # 3. Fix permissions so Wazuh Agent can read it
-        chmod 644 "zap/wrk/zap_report.json"
-
-        # 4. Copy to your backup/artifact folder
-        cp "zap/wrk/zap_report.json" owasp-zap-report/
-        cp "zap/wrk/zap_report.html" owasp-zap-report/
-
-        echo "=== SUCCESS: JSON reduced for Wazuh-n8n pipeline ==="
+        echo "=== Final JSON Size: $(du -sh zap/wrk/zap_report.json) ==="
     else
-        echo "Error: zap_report.json not found in zap/wrk/"
+        echo "ZAP JSON not found!"
     fi
     # This will grep for the High risk alert in the HTML report
     grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found Yet"
