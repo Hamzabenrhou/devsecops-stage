@@ -65,21 +65,29 @@ if [ -f "zap/wrk/zap_report.html" ]; then
     echo "=== ZAP Scan Summary ==="
     # This takes the multi-line ZAP report and turns it into a single line for Wazuh
     # Move and cleanup reports
+    # Move and cleanup reports
     if [ -f "zap/wrk/zap_report.json" ]; then
-        # 1. Minify the JSON directly in the folder Wazuh is watching
-        cat "zap/wrk/zap_report.json" | jq -c . > "zap/wrk/zap_report.min.json"
+        echo "=== Processing ZAP Report for Wazuh ==="
 
-        # 2. Overwrite the original with the minified one
+        # 1. Filter AND Minify in one command
+        # This keeps only the Alert Name, Risk Code, URL, and Payload
+        cat "zap/wrk/zap_report.json" | jq -c '{
+          alerts: [.site[].alerts[] | {alert: .alert, risk: .riskcode, uri: .instances[0].uri, attack: .instances[0].attack}]
+        }' > "zap/wrk/zap_report.min.json"
+
+        # 2. Overwrite the original with the small version
         mv "zap/wrk/zap_report.min.json" "zap/wrk/zap_report.json"
+
+        # 3. Fix permissions so Wazuh Agent can read it
         chmod 644 "zap/wrk/zap_report.json"
-        
-        # 3. Copy to your other report folder for backup/Jenkins artifacts
+
+        # 4. Copy to your backup/artifact folder
         cp "zap/wrk/zap_report.json" owasp-zap-report/
         cp "zap/wrk/zap_report.html" owasp-zap-report/
 
-        echo "=== ZAP Scan Summary: JSON Minified for Wazuh ==="
+        echo "=== SUCCESS: JSON reduced for Wazuh-n8n pipeline ==="
     else
-        echo "Error: ZAP Report generation failed."
+        echo "Error: zap_report.json not found in zap/wrk/"
     fi
     # This will grep for the High risk alert in the HTML report
     grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found Yet"
