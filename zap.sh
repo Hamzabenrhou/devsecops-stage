@@ -46,10 +46,12 @@ set +e
 docker run --rm \
     --network host \
     -v "$(pwd)/zap/wrk:/zap/wrk" \
+    -v "$(pwd)/zap_rules.conf:/zap/rules.conf" \
     --user root \
     zaproxy/zap-stable:latest \
     zap-full-scan.py \
     -t "${FULL_URL}/check?name=test" \
+    -c /zap/rules.conf \
     -r zap_report.html \
     -J zap_report.json \
     -I
