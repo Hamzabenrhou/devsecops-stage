@@ -1,56 +1,42 @@
 package com.devsecops;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.HtmlUtils;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.util.html.HtmlUtils;
 
-@RestController
-public class NumericController {
+@Configuration
+@EnableWebSecurity
+public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://node-pod:5000/plusone";
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                // 1. Disable CSRF so ZAP can send POST/PUT requests if needed
+                .csrf().disable()
 
-	RestTemplate restTemplate = new RestTemplate();
+                // 2. Allow all traffic so ZAP doesn't get a 403 Forbidden
+                .authorizeRequests()
+                .antMatchers("/**").permitAll()
+                .and()
 
-	@GetMapping("/")
-	public String welcome() {
-		// Link helps the ZAP spider discover the vulnerable endpoint automatically
-		return "<html><body>" +
-				"<h1>Kubernetes DevSecOps</h1>" +
-				"<a href='/check?name=DevSecOpsUser'>Run Security Check</a>" +
-				"</body></html>";
-	}
+                // 3. Disable the "Security Gates" that lower the ZAP Risk score
+                .headers()
+                // This is the most important line:
+                // If enabled, ZAP sees the 'X-XSS-Protection' header and says "Risk: Low"
+                // because the browser blocks it. We want "Risk: High".
+                .xssProtection().disable()
 
-	// --- THE VULNERABILITY ---
-	// 'produces = "text/html"' is critical to trigger High Risk XSS in ZAP
-	@GetMapping(value = "/check", produces = "text/html")
-	public String check(@RequestParam(value = "name") String name) {
-		return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
-	}
+                // Allow ZAP to execute its test scripts in the browser response
+                .contentSecurityPolicy("script-src 'unsafe-inline'").and()
 
-	@GetMapping("/compare/{value}")
-	public String compareToFifty(@PathVariable int value) {
-		String message = "Could not determine comparison";
-		if (value > 50) {
-			message = "Greater than 50";
-		} else {
-			message = "Smaller than or equal to 50";
-		}
-		return message;
-	}
+                // Disable Frame Options so ZAP's HUD or reports can wrap the app
+                .frameOptions().disable()
+                .and()
 
-	@GetMapping("/increment/{value}")
-	public int increment(@PathVariable int value) {
-		ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-		String response = responseEntity.getBody();
-		logger.info("Value Received in Request - " + value);
-		logger.info("Node Service Response - " + response);
-		return Integer.parseInt(response);
-	}
+                // 4. Disable standard auth to keep the path clear
+                .httpBasic().disable()
+                .formLogin().disable();
+    }
 }
