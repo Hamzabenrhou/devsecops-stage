@@ -31,19 +31,17 @@ public class NumericController {
 	// --- FIXED CODE ---
 	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
-		// 1. STRICT ALLOW-LIST VALIDATION (Fixes File Inclusion Alert)
-		// Only allow letters, numbers, and spaces. Reject everything else.
-		if (name == null || !name.matches("^[a-zA-Z0-9 ]+$")) {
-			return "<html><body><h1>Invalid Input Detected</h1>" +
-					"<p>Only alphanumeric characters are allowed.</p></body></html>";
+		// 1. STRICT VALIDATION: Reject anything that isn't a simple name
+		// This stops "Path Traversal" attempts like ../ or %00
+		if (name == null || !name.matches("^[a-zA-Z0-9 ]{1,20}$")) {
+			return "<html><body><h1>Invalid Input</h1><p>Names must be alphanumeric and under 20 characters.</p></body></html>";
 		}
 
-		// 2. XSS ENCODING (You already have this)
-		String safeName = HtmlUtils.htmlEscape(name);
+		// 2. ESCAPING: Keeps the XSS protection
+		String safeName = org.springframework.web.util.HtmlUtils.htmlEscape(name);
 
 		return "<html><body><h1>Hello " + safeName + "</h1></body></html>";
 	}
-
 	@GetMapping("/compare/{value}")
 	public String compareToFifty(@PathVariable int value) {
 		String message = "Could not determine comparison";
