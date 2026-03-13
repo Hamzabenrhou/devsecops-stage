@@ -1,4 +1,4 @@
---- FIXED CODE START ---
+
 package com.devsecops;
 
 import org.slf4j.Logger;
@@ -54,4 +54,3 @@ public class NumericController {
 		return Integer.parseInt(response);
 	}
 }
---- FIXED CODE END ---
