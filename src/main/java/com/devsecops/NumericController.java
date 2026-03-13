@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.HtmlUtils;
+
 
 @RestController
 public class NumericController {
@@ -32,7 +32,7 @@ public class NumericController {
 	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
 
-		return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
+		return "<html><body><h1>Hello " + name + "</h1></body></html>";
 	}
 	@GetMapping("/compare/{value}")
 	public String compareToFifty(@PathVariable int value) {
