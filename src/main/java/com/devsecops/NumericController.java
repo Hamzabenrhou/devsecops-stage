@@ -1,3 +1,4 @@
+--- FIXED CODE START ---
 package com.devsecops;
 
 import org.slf4j.Logger;
@@ -27,8 +28,7 @@ public class NumericController {
 				"</body></html>";
 	}
 
-	// --- THE VULNERABILITY ---
-	// 'produces = "text/html"' is critical to trigger High Risk XSS in ZAP
+	// --- FIXED CODE ---
 	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
 		return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
@@ -54,3 +54,4 @@ public class NumericController {
 		return Integer.parseInt(response);
 	}
 }
+--- FIXED CODE END ---
