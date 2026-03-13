@@ -31,7 +31,17 @@ public class NumericController {
 	// --- FIXED CODE ---
 	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
-		return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
+		// 1. STRICT ALLOW-LIST VALIDATION (Fixes File Inclusion Alert)
+		// Only allow letters, numbers, and spaces. Reject everything else.
+		if (name == null || !name.matches("^[a-zA-Z0-9 ]+$")) {
+			return "<html><body><h1>Invalid Input Detected</h1>" +
+					"<p>Only alphanumeric characters are allowed.</p></body></html>";
+		}
+
+		// 2. XSS ENCODING (You already have this)
+		String safeName = HtmlUtils.htmlEscape(name);
+
+		return "<html><body><h1>Hello " + safeName + "</h1></body></html>";
 	}
 
 	@GetMapping("/compare/{value}")
