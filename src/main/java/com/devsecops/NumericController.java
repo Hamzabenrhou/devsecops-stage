@@ -24,7 +24,7 @@ public class NumericController {
 		// Link helps the ZAP spider discover the vulnerable endpoint automatically
 		return "<html><body>" +
 				"<h1>Kubernetes DevSecOps</h1>" +
-				"<a href='/check?name=DevSecOpsUser'>Run Security Check</a>" +
+
 				"</body></html>";
 	}
 
