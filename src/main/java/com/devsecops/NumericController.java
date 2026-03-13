@@ -30,17 +30,16 @@ public class NumericController {
 
 	// --- FIXED CODE ---
 	@GetMapping(value = "/check", produces = "text/html")
-	public String check(@RequestParam(value = "name") String name) {
-		// 1. STRICT VALIDATION: Reject anything that isn't a simple name
-		// This stops "Path Traversal" attempts like ../ or %00
+	public ResponseEntity<String> check(@RequestParam(value = "name") String name) {
+		// 1. STRICT VALIDATION
 		if (name == null || !name.matches("^[a-zA-Z0-9 ]{1,20}$")) {
-			return "<html><body><h1>Invalid Input</h1><p>Names must be alphanumeric and under 20 characters.</p></body></html>";
+			// Returning a 400 Bad Request tells ZAP: "I blocked this intentionally"
+			return ResponseEntity.badRequest().body("<html><body><h1>Invalid Input</h1></body></html>");
 		}
 
-		// 2. ESCAPING: Keeps the XSS protection
+		// 2. ESCAPING
 		String safeName = org.springframework.web.util.HtmlUtils.htmlEscape(name);
-
-		return "<html><body><h1>Hello " + safeName + "</h1></body></html>";
+		return ResponseEntity.ok("<html><body><h1>Hello " + safeName + "</h1></body></html>");
 	}
 	@GetMapping("/compare/{value}")
 	public String compareToFifty(@PathVariable int value) {
