@@ -12,11 +12,27 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // Use lambdas to avoid "cannot find symbol" errors
-                .csrf(csrf -> csrf.disable())
-                .authorizeRequests(auth -> auth.antMatchers("/**").permitAll())
-                .headers(headers -> headers.frameOptions(frame -> frame.disable()))
-                .httpBasic(basic -> basic.disable())
-                .formLogin(form -> form.disable());
+                
+                .csrf().disable()
+                .authorizeRequests()
+                .antMatchers("/**").permitAll()
+                .and()
+
+
+
+                .headers()
+
+                .xssProtection().disable()
+
+
+                .contentSecurityPolicy("script-src 'unsafe-inline'").and()
+
+
+                .frameOptions().disable()
+                .and()
+
+
+                .httpBasic().disable()
+                .formLogin().disable();
     }
 }
