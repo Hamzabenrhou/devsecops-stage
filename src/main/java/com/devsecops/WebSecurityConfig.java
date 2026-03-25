@@ -13,7 +13,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 // 1. Disable CSRF so ZAP can send POST/PUT requests if needed
-                .csrf().disable()
+                .csrf().disable() // Disabling CSRF for integration testing with ZAP
 
                 // 2. Allow all traffic so ZAP doesn't get a 403 Forbidden
                 .authorizeRequests()
