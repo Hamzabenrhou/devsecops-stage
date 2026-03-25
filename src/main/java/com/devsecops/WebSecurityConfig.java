@@ -12,27 +12,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // 1. Properly Enable CSRF (Using the correct Spring Security 5.x syntax)
-                .csrf()
-                .and()
-
-                // 2. Require Authentication for everything
-                .authorizeRequests()
-                .anyRequest().authenticated()
-                .and()
-
-                // 3. Enable Security Headers (XSS and Frame Options)
+                .csrf().disable()
                 .headers()
-                .xssProtection()
-                .and()
-                .frameOptions().deny() // Prevents clickjacking
-                .contentSecurityPolicy("script-src 'self'") // Stricter CSP for production
-                .and()
-                .and()
-
-                // 4. Standard Authentication
-                .httpBasic()
-                .and()
-                .formLogin();
+                .addHeaderWriter((request, response) -> {
+                    response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+                    response.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
+                    response.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+                });
     }
 }
