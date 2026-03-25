@@ -11,8 +11,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        // TODO: Evaluate the necessity of disabling CSRF protection.
+        // Consider alternative solutions or additional security measures before proceeding.
+        
         http
-                .csrf().disable()
+                .csrf().disable() // Disabling CSRF for now. Review and reconsider this decision.
                 .headers()
                 .addHeaderWriter((request, response) -> {
                     response.setHeader("Cross-Origin-Opener-Policy", "same-origin");
