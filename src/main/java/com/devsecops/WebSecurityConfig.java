@@ -12,27 +12,22 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                
-                .csrf().disable()
-                .authorizeRequests()
-                .antMatchers("/**").permitAll()
+            .authorizeRequests()
+                .antMatchers("/**").authenticated() // Ensure that all endpoints are authenticated
                 .and()
 
+            .csrf().requireCsrfProtectionOnFormSubmission() // Enable CSRF protection for form submissions
+                .and()
 
-
-                .headers()
-
+            .headers()
                 .xssProtection().disable()
-
-
-                .contentSecurityPolicy("script-src 'unsafe-inline'").and()
-
-
+                .contentSecurityPolicy("script-src 'unsafe-inline'") // Keep Content Security Policy if needed
                 .frameOptions().disable()
                 .and()
 
+            .httpBasic()
+                .and()
 
-                .httpBasic().disable()
-                .formLogin().disable();
+            .formLogin();
     }
 }
