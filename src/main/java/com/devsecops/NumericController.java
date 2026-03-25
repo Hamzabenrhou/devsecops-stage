@@ -26,6 +26,11 @@ public class NumericController {
 
 				"</body></html>";
 	}
+	@GetMapping("/admin-check")
+	public String adminCheck() {
+		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
+		return "Admin access verified";
+	}
 
 	@GetMapping(value = "/check", produces = "text/html")
 	public String check(@RequestParam(value = "name") String name) {
