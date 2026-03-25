@@ -12,15 +12,18 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                // 1. Disable CSRF so ZAP can send POST/PUT requests if needed
-                .csrf().disable() // Disabling CSRF for integration testing with ZAP
+                // Enable CSRF protection by default
+                .csrf() 
 
-                // 2. Allow all traffic so ZAP doesn't get a 403 Forbidden
+                // 1. Allow all traffic so ZAP doesn't get a 403 Forbidden
                 .authorizeRequests()
                 .antMatchers("/**").permitAll()
                 .and()
 
-                // 3. Disable the "Security Gates" that lower the ZAP Risk score
+                // Configure CSRF protection settings if needed (e.g., custom token parameter name)
+                .csrf().tokenParameterName("_csrf").parameterName("_csrf")
+
+                // 2. Disable the "Security Gates" that lower the ZAP Risk score
                 .headers()
                 // This is the most important line:
                 // If enabled, ZAP sees the 'X-XSS-Protection' header and says "Risk: Low"
@@ -34,7 +37,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .frameOptions().disable()
                 .and()
 
-                // 4. Disable standard auth to keep the path clear
+                // 3. Disable standard auth to keep the path clear
                 .httpBasic().disable()
                 .formLogin().disable();
     }
