@@ -2,6 +2,7 @@ package com.devsecops;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,12 @@ import org.springframework.web.util.HtmlUtils;
 public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://node-pod:5000/plusone";
+
+	@Value("${baseURL}")
+	private String baseURL;
+
+	@Value("${secretToken:defaultSecretToken}") // Default to a placeholder or an empty value if not set
+	private String secretToken;
 
 	RestTemplate restTemplate = new RestTemplate();
 
@@ -26,10 +32,14 @@ public class NumericController {
 
 				"</body></html>";
 	}
+
 	@GetMapping("/admin-check")
 	public String adminCheck() {
-		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-		return "Admin access verified";
+		if (secretToken != null && !secretToken.isEmpty()) {
+			return "Admin access verified";
+		} else {
+			return "Admin access denied - Secret token not set";
+		}
 	}
 
 	@GetMapping(value = "/check", produces = "text/html")
