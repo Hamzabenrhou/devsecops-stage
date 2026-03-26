@@ -15,56 +15,55 @@ import org.springframework.web.util.HtmlUtils;
 @RestController
 public class NumericController {
 
-	private final Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Value("${baseURL:http://node-pod:5000/plusone}")
-	private String baseURL;
+    @Value("${baseURL:http://node-pod:5000/plusone}")
+    private String baseURL;
 
+    @Value("${admin.secret.token:default_token}")
+    private String adminSecretToken; // New property for the secret token
 
+    RestTemplate restTemplate = new RestTemplate();
 
-	RestTemplate restTemplate = new RestTemplate();
+    @GetMapping("/")
+    public String welcome() {
+        return "<html><body>" +
+                "<h1>Kubernetes DevSecOps</h1>" +
+                "</body></html>";
+    }
 
-	@GetMapping("/")
-	public String welcome() {
+    @GetMapping("/admin-check")
+    public String adminCheck() {
+        // Assuming you want to verify the token in some way
+        if ("expected_token".equals(adminSecretToken)) { // Replace with your actual verification logic
+            return "Admin access verified";
+        } else {
+            return "Access denied";
+        }
+    }
 
-		return "<html><body>" +
-				"<h1>Kubernetes DevSecOps</h1>" +
+    @GetMapping(value = "/check", produces = "text/html")
+    public String check(@RequestParam(value = "name") String name) {
+        return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
+    }
 
-				"</body></html>";
-	}
+    @GetMapping("/compare/{value}")
+    public String compareToFifty(@PathVariable int value) {
+        String message = "Could not determine comparison";
+        if (value > 50) {
+            message = "Greater than 50";
+        } else {
+            message = "Smaller than or equal to 50";
+        }
+        return message;
+    }
 
-	@GetMapping("/admin-check")
-	public String adminCheck() {
-		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-		return "Admin access verified";
-	}
-
-	@GetMapping(value = "/check", produces = "text/html")
-	public String check(@RequestParam(value = "name") String name) {
-
-		return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
-	}
-
-	@GetMapping("/compare/{value}")
-	public String compareToFifty(@PathVariable int value) {
-		String message = "Could not determine comparison";
-		if (value > 50) {
-			message = "Greater than 50";
-		} else {
-			message = "Smaller than or equal to 50";
-		}
-		return message;
-	}
-
-	@GetMapping("/increment/{value}")
-	public int increment(@PathVariable int value) {
-		ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-		String response = responseEntity.getBody();
-		logger.info("Value Received in Request - " + value);
-		logger.info("Node Service Response - " + response);
-		return Integer.parseInt(response);
-
-
-
-		}
-	}
+    @GetMapping("/increment/{value}")
+    public int increment(@PathVariable int value) {
+        ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+        String response = responseEntity.getBody();
+        logger.info("Value Received in Request - " + value);
+        logger.info("Node Service Response - " + response);
+        return Integer.parseInt(response);
+    }
+}
