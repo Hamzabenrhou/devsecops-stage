@@ -123,7 +123,7 @@
 					</dependency>
 				</dependencies>
 				<configuration>
-					<mutationThreshold>20</mutationThreshold>
+					<mutationThreshold>10</mutationThreshold>
 					<outputFormats>
 						<outputFormat>XML</outputFormat>
 						<outputFormat>HTML</outputFormat>
