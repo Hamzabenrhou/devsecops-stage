@@ -2,6 +2,7 @@ package com.devsecops;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,17 +17,16 @@ public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
 
-	@Value("${baseURL}")
+	@Value("${baseURL:http://node-pod:5000/plusone}")
 	private String baseURL;
 
-	@Value("${secretToken:defaultSecretToken}") // Default to a placeholder or an empty value if not set
-	private String secretToken;
+
 
 	RestTemplate restTemplate = new RestTemplate();
 
 	@GetMapping("/")
 	public String welcome() {
-		// Link helps the ZAP spider discover the vulnerable endpoint automatically
+
 		return "<html><body>" +
 				"<h1>Kubernetes DevSecOps</h1>" +
 
@@ -35,11 +35,8 @@ public class NumericController {
 
 	@GetMapping("/admin-check")
 	public String adminCheck() {
-		if (secretToken != null && !secretToken.isEmpty()) {
-			return "Admin access verified";
-		} else {
-			return "Admin access denied - Secret token not set";
-		}
+		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
+		return "Admin access verified";
 	}
 
 	@GetMapping(value = "/check", produces = "text/html")
@@ -66,5 +63,8 @@ public class NumericController {
 		logger.info("Value Received in Request - " + value);
 		logger.info("Node Service Response - " + response);
 		return Integer.parseInt(response);
+
+
+
+		}
 	}
-}
