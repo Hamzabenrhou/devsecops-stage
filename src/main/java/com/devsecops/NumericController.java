@@ -2,6 +2,7 @@ package com.devsecops;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +15,9 @@ import org.springframework.web.util.HtmlUtils;
 public class NumericController {
 
 	private final Logger logger = LoggerFactory.getLogger(getClass());
-	private static final String baseURL = "http://node-pod:5000/plusone";
+	
+	@Value("${baseURL}")
+	private static final String baseURL;
 
 	RestTemplate restTemplate = new RestTemplate();
 
@@ -23,12 +26,15 @@ public class NumericController {
 		// Link helps the ZAP spider discover the vulnerable endpoint automatically
 		return "<html><body>" +
 				"<h1>Kubernetes DevSecOps</h1>" +
-
+				
 				"</body></html>";
 	}
 	@GetMapping("/admin-check")
 	public String adminCheck() {
-		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
+		String secretToken = System.getenv("ADMIN_SECRET_TOKEN");
+		if (secretToken == null) {
+			return "Admin access verification failed";
+		}
 		return "Admin access verified";
 	}
 
@@ -58,3 +64,7 @@ public class NumericController {
 		return Integer.parseInt(response);
 	}
 }
+
+// Add these lines to your application.properties or application.yml
+// baseURL=http://node-pod:5000/plusone
+// ADMIN_SECRET_TOKEN=sqa_e4784435e3597732242ce9a699ce3d81f94e665f
