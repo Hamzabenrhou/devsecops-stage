@@ -1,7 +1,7 @@
 FROM adoptopenjdk/openjdk8:alpine-slim
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
-RUN addgroup -S devops-security && adduser -u root -S devsecops -G devops-security
+RUN addgroup -S devops-security && adduser -u 0 -S devsecops -G devops-security
 COPY ${JAR_FILE} /home/devsecops/app.jar
-USER 999
+USER 0
 ENTRYPOINT ["java","-jar","/home/devsecops/app.jar"]
