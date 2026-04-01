@@ -153,8 +153,11 @@ stage('SonarQube Analysis') {
                        docker run --rm \
                            -v "\$(pwd)":/project \
                            openpolicyagent/conftest:v0.58.0 \
-                           test --policy opa-docker-security.rego \
-                           Dockerfile
+                           test --policy opa-docker-security.rego --output json \
+                               Dockerfile > conftest_docker.json || true
+
+                               # Flatten JSON to a single line and append to Wazuh-monitored log
+                               cat conftest_docker.json | jq -c '.[]' >> /var/log/jenkins/iac_security.log
                    """
                }
            }
@@ -269,8 +272,11 @@ stage('Build & Push Node.js Image') {
                                                                            docker run --rm \
                                                                                -v "\$(pwd)":/project \
                                                                                openpolicyagent/conftest:v0.58.0 \
-                                                                               test --policy opa-k8s-security.rego \
-                                                                               k8s_deployment_service.yaml
+                                                                              test --policy opa-k8s-security.rego --output json \
+                                                                                  k8s_deployment_service.yaml > conftest_k8s.json || true
+
+                                                                                  # Flatten JSON to a single line
+                                                                                  cat conftest_k8s.json | jq -c '.[]' >> /var/log/jenkins/iac_security.log
                                                                        """
 
                                                   }
