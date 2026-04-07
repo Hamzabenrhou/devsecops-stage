@@ -1,6 +1,6 @@
 FROM alpine:3.15.0
 
-RUN apk add --no-cache openssl=1.1.1o-r0
+
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
 
