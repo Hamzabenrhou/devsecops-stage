@@ -1,10 +1,9 @@
-# Changed from alpine-slim to a standard openjdk image (contains many CVEs for the demo)
-FROM openjdk:8-jdk
+FROM eclipse-temurin:8-jdk-focal
 
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
 
-# Adjusted user creation for Debian/Ubuntu (standard openjdk image)
+# Adjusted user creation for Debian/Ubuntu environments
 RUN groupadd -r devops-security && useradd -r -u 999 -g devops-security devsecops
 
 COPY ${JAR_FILE} /home/devsecops/app.jar
