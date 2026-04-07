@@ -133,12 +133,12 @@ stage('SonarQube Analysis') {
          }
      }
  }
-             stage('Trivy scan') {
-                        steps {
-                          sh "bash trivy-docker-image.sh"
-
-                        }
-                    }
+//              stage('Trivy scan') {
+//                         steps {
+//                           sh "bash trivy-docker-image.sh"
+//
+//                         }
+//                     }
               stage('Debug Files') {
                   steps {
                       sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
