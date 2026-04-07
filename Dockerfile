@@ -1,4 +1,4 @@
-FROM eclipse-temurin:8-jdk-focal
+FROM python:3.4-slim-stretch
 
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
