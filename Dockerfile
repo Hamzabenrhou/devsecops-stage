@@ -1,4 +1,4 @@
-FROM python:3.4-slim-stretch
+FROM python:3.9-slim-buster
 
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
