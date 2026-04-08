@@ -20,8 +20,7 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-    @Value("${admin.secret.token:default_token}")
-    private String adminSecretToken; // New property for the secret token
+     
 
     RestTemplate restTemplate = new RestTemplate();
 
@@ -34,12 +33,9 @@ public class NumericController {
 
     @GetMapping("/admin-check")
     public String adminCheck() {
-        // Assuming you want to verify the token in some way
-        if ("expected_token".equals(adminSecretToken)) { // Replace with your actual verification logic
-            return "Admin access verified";
-        } else {
-            return "Access denied";
-        }
+		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
+		return "Admin access verified";
+
     }
 
     @GetMapping(value = "/check", produces = "text/html")
