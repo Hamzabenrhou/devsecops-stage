@@ -20,7 +20,7 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-     
+
 
     RestTemplate restTemplate = new RestTemplate();
 
