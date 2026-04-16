@@ -20,8 +20,6 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-     
-
     RestTemplate restTemplate = new RestTemplate();
 
     @GetMapping("/")
@@ -32,10 +30,12 @@ public class NumericController {
     }
 
     @GetMapping("/admin-check")
-    public String adminCheck() {
-		String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-		return "Admin access verified";
-
+    public ResponseEntity<String> adminCheck(@Value("${adminSecretToken}") String secretToken) {
+        if ("sqa_e4784435e3597732242ce9a699ce3d81f94e665f".equals(secretToken)) {
+            return ResponseEntity.ok("Admin access verified");
+        } else {
+            return ResponseEntity.status(403).body("Access denied");
+        }
     }
 
     @GetMapping(value = "/check", produces = "text/html")
