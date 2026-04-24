@@ -45,7 +45,7 @@ public class NumericController {
     public String check(@RequestParam(value = "name") String name) {
         return "<html><body><h1>Hello " + name + "</h1></body></html>";
     }
-    
+
 
     @GetMapping("/compare/{value}")
     public String compareToFifty(@PathVariable int value) {
