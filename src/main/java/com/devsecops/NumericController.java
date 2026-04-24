@@ -2,7 +2,6 @@ package com.devsecops;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.web.util.HtmlUtils;
 
 @RestController
 public class NumericController {
@@ -21,7 +20,6 @@ public class NumericController {
     private String baseURL;
     @Value("${admin.secret.token:default_token}")
     private String adminSecretToken;
-
 
     RestTemplate restTemplate = new RestTemplate();
 
@@ -39,13 +37,13 @@ public class NumericController {
             return "Admin access verified";
         } else {
             return "Access denied";
-        }}
+        }
+    }
 
     @GetMapping(value = "/check", produces = "text/html")
     public String check(@RequestParam(value = "name") String name) {
-        return "<html><body><h1>Hello " + name + "</h1></body></html>";
+        return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
     }
-
 
     @GetMapping("/compare/{value}")
     public String compareToFifty(@PathVariable int value) {
