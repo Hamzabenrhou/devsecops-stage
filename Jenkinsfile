@@ -100,38 +100,38 @@ stage('SonarQube Analysis') {
 
 
 
-//  stage('Dependency Check') {
-//      steps {
-//          withVault(
-//              configuration: [
-//                  vaultUrl: 'https://104.197.188.180:8200',
-//                  vaultCredentialId: 'vault-jenkins-approle',
-//                  skipSslVerification: true,
-//                  prefixPath: 'secret'   // keep if it worked for Sonar
-//              ],
-//              vaultSecrets: [
-//                  [path: 'jenkins/nvd-api-key',  // ← your path
-//                   engineVersion: 2,
-//                   secretValues: [
-//                       [vaultKey: 'NVD_API_KEY', envVar: 'NVD_API_KEY']  // adjust vaultKey if your key name is different
-//                   ]
-//                  ]
-//              ]
-//          ) {
-//              echo "NVD API key loaded from Vault (length: ${NVD_API_KEY?.length() ?: 0})"
-//
-//              // Run the check using the fetched key
-//              sh 'mvn org.owasp:dependency-check-maven:12.2.0:check -DnvdApiKey=$NVD_API_KEY -U'
-//          }
-//      }
-//
-//      post {
-//          always {
-//              // Publish the HTML/XML report (Dependency-Check plugin required)
-//              dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
-//          }
-//      }
-//  }
+ stage('Dependency Check') {
+     steps {
+         withVault(
+             configuration: [
+                 vaultUrl: 'https://104.197.188.180:8200',
+                 vaultCredentialId: 'vault-jenkins-approle',
+                 skipSslVerification: true,
+                 prefixPath: 'secret'   // keep if it worked for Sonar
+             ],
+             vaultSecrets: [
+                 [path: 'jenkins/nvd-api-key',  // ← your path
+                  engineVersion: 2,
+                  secretValues: [
+                      [vaultKey: 'NVD_API_KEY', envVar: 'NVD_API_KEY']  // adjust vaultKey if your key name is different
+                  ]
+                 ]
+             ]
+         ) {
+             echo "NVD API key loaded from Vault (length: ${NVD_API_KEY?.length() ?: 0})"
+
+             // Run the check using the fetched key
+             sh 'mvn org.owasp:dependency-check-maven:12.2.0:check -DnvdApiKey=$NVD_API_KEY -U'
+         }
+     }
+
+     post {
+         always {
+             // Publish the HTML/XML report (Dependency-Check plugin required)
+             dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+         }
+     }
+ }
 //              stage('Trivy scan') {
 //                         steps {
 //                           sh "bash trivy-docker-image.sh"
