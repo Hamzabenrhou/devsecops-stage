@@ -18,7 +18,9 @@ public class NumericController {
 
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
-    
+
+    @Value("${restTemplateTimeout:5000}") // Add a timeout for RestTemplate requests
+    private int restTemplateTimeout;
 
     RestTemplate restTemplate = new RestTemplate();
 
