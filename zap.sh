@@ -61,34 +61,40 @@ set -e
 echo "ZAP exit code: $ZAP_EXIT_CODE"
 
 # Move and cleanup reports
-if [ -f "zap/wrk/zap_report.html" ]; then
-    cp zap/wrk/zap_report.html owasp-zap-report/
-    cp zap/wrk/zap_report.json owasp-zap-report/
-    echo "=== ZAP Scan Summary ==="
-    # This takes the multi-line ZAP report and turns it into a single line for Wazuh
-    # Move and cleanup reports
-    # Move and cleanup reports
-    if [ -f "zap/wrk/zap_report.json" ]; then
-        echo "=== Cleaning ZAP JSON for Wazuh ==="
+if [ -f "zap/wrk/zap_report.json" ]; then
+    echo "=== Analyzing ZAP JSON for High Alerts ==="
 
-        # We are selecting ONLY High Risk (3) and keeping ONLY the name and URI.
-        # This reduces the size by 99%.
-        cat zap/wrk/zap_report.json | jq -c '{
+    # Count alerts with riskcode 3 (High)
+    HIGH_COUNT=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' zap/wrk/zap_report.json)
+
+    if [ "$HIGH_COUNT" -gt 0 ]; then
+        echo "SUCCESS: Found $HIGH_COUNT high alerts. Generating minified JSON for Wazuh..."
+
+        # Select ONLY High Risk (3) alerts and extract alert name and URI
+        jq -c '{
           high_alerts: [.site[].alerts[] | select(.riskcode == "3") | {a: .alert, u: .instances[0].uri}]
-        }' > zap/wrk/zap_report.min.json
+        }' zap/wrk/zap_report.json > zap/wrk/zap_report.min.json
 
-        # Overwrite the file Wazuh is watching
+        # Overwrite the monitored file only if alerts exist
         mv zap/wrk/zap_report.min.json zap/wrk/zap_report.json
         chmod 644 zap/wrk/zap_report.json
-
+        cp zap/wrk/zap_report.json owasp-zap-report/
         echo "=== Final JSON Size: $(du -sh zap/wrk/zap_report.json) ==="
     else
-        echo "ZAP JSON not found!"
+        echo "CLEAN SCAN: 0 High Risk alerts found. Deleting JSON to prevent false triggers."
+        # Deleting the file ensures Wazuh sees no new data
+        rm -f zap/wrk/zap_report.json
     fi
-    # This will grep for the High risk alert in the HTML report
-    grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found Yet"
 else
-    echo "Error: ZAP Report generation failed."
+    echo "ZAP JSON not found!"
+fi
+
+echo "=== HTML Report Summary ==="
+grep -oP '(?<=<div>)High(?=</div>)' owasp-zap-report/zap_report.html || echo "No High Risk Found in HTML"
+
+
+else
+echo "Error: ZAP Report generation failed."
 fi
 
 exit 0
