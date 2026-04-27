@@ -19,7 +19,7 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
     
-
+    // Use a safer alternative for HTTP requests if possible, e.g., Spring's WebClient
     RestTemplate restTemplate = new RestTemplate();
 
     @GetMapping("/")
@@ -30,9 +30,9 @@ public class NumericController {
     }
 
     @GetMapping("/admin-check")
-    public String adminCheck() {
-        String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-        return "Admin access verified";
+    public ResponseEntity<String> adminCheck() {
+        // Remove the hardcoded secret token
+        return ResponseEntity.ok("Admin access verified");
     }
 
     @GetMapping(value = "/check", produces = "text/html")
@@ -52,11 +52,33 @@ public class NumericController {
     }
 
     @GetMapping("/increment/{value}")
-    public int increment(@PathVariable int value) {
+    public ResponseEntity<Integer> increment(@PathVariable int value) {
+        // Validate the URL before making the request
+        if (!isValidUrl(baseURL + '/' + value)) {
+            logger.warn("Invalid URL: " + baseURL + '/' + value);
+            return ResponseEntity.badRequest().body(null);
+        }
+
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
         String response = responseEntity.getBody();
         logger.info("Value Received in Request - " + value);
         logger.info("Node Service Response - " + response);
-        return Integer.parseInt(response);
+        
+        // Validate the response before parsing
+        if (response == null || !response.matches("\\d+")) {
+            logger.warn("Invalid response from node service: " + response);
+            return ResponseEntity.badRequest().body(null);
+        }
+
+        return ResponseEntity.ok(Integer.parseInt(response));
+    }
+
+    private boolean isValidUrl(String url) {
+        try {
+            new java.net.URL(url).toURI();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
