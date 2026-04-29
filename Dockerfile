@@ -5,3 +5,4 @@ RUN addgroup -S devops-security && adduser -u 999 -S devsecops -G devops-securit
 COPY ${JAR_FILE} /home/devsecops/app.jar
 
 ENTRYPOINT ["java","-jar","/home/devsecops/app.jar"]
+
