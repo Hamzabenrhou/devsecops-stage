@@ -121,7 +121,7 @@ stage('SonarQube Analysis') {
              echo "NVD API key loaded from Vault (length: ${NVD_API_KEY?.length() ?: 0})"
 
              // Run the check using the fetched key
-
+            sh 'mvn org.owasp:dependency-check-maven:purge'
              sh 'mvn org.owasp:dependency-check-maven:12.2.0:check -DnvdApiKey=$NVD_API_KEY -U'
          }
      }
