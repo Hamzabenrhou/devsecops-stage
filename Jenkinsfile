@@ -121,7 +121,7 @@ stage('SonarQube Analysis') {
 
              // Run the check using the fetched key
 
-             sh 'mvn org.owasp:dependency-check-maven:12.2.0:check -DnvdApiKey=$NVD_API_KEY -U'
+             sh 'mvn org.owasp:dependency-check-maven:12.2.0:check -DnvdApiKey=a0621a6e-87b6-4bbc-9d1a-29ce11eaa7fc -U'
          }
      }
 
