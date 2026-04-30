@@ -426,8 +426,29 @@ stage('OWASP-ZAP DAST') {
   post{
     always{
         publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, icon: '', keepAll: true, reportDir: 'owasp-zap-report', reportFiles: 'zap_report.html', reportName: 'OWASP ZAP HTML Report', reportTitles: 'OWASP ZAP HTML Report', useWrapperFileDirectly: true])
-
+        echo "Pipeline finished. Sending notification..."
     }
+    
+            success {
+                emailext (
+                    subject: "✅ SUCCESS: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """<h3>Build Successful</h3>
+                             <p>The pipeline for <b>${env.JOB_NAME}</b> finished successfully.</p>
+                             <p>Console: <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>
+                             <p>Status: All security gates passed (or handled).</p>""",
+                    to: 'your-email@example.com'
+                )
+            }
+            failure {
+                emailext (
+                    subject: "❌ FAILURE: Build ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                    body: """<h3>Build Failed</h3>
+                             <p>The pipeline for <b>${env.JOB_NAME}</b> has failed.</p>
+                             <p>Check the logs here: <a href='${env.BUILD_URL}'>${env.BUILD_URL}</a></p>
+                             <p>Possible causes: Critical Vulnerabilities found or Infrastructure failure.</p>""",
+                    to: 'your-email@example.com'
+                )
+            }
 
     }
 }
