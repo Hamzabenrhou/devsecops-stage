@@ -3,11 +3,14 @@ package com.devsecops;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.HtmlUtils;
 
@@ -19,8 +22,7 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-
-    RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @GetMapping("/")
     public String welcome() {
@@ -30,15 +32,21 @@ public class NumericController {
     }
 
     @GetMapping("/admin-check")
-    public String adminCheck() {
-        String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-        return "Admin access verified";
+    public ResponseEntity<String> adminCheck(@Value("${ADMIN_SECRET}") String secretToken) {
+        if ("sqa_e4784435e3597732242ce9a699ce3d81f94e665f".equals(secretToken)) {
+            return ResponseEntity.ok("Admin access verified");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized access");
+        }
     }
 
     @GetMapping(value = "/check", produces = "text/html")
     public String check(@RequestParam(value = "name") String name) {
-        return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
-        
+        if (isNameValid(name)) {
+            return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
+        } else {
+            return "<html><body><h1>Invalid input</h1></body></html>";
+        }
     }
 
     @GetMapping("/compare/{value}")
@@ -53,11 +61,21 @@ public class NumericController {
     }
 
     @GetMapping("/increment/{value}")
-    public int increment(@PathVariable int value) {
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-        String response = responseEntity.getBody();
-        logger.info("Value Received in Request - " + value);
-        logger.info("Node Service Response - " + response);
-        return Integer.parseInt(response);
+    public ResponseEntity<Integer> increment(@PathVariable int value) {
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+            String response = responseEntity.getBody();
+            logger.info("Value Received in Request - " + value);
+            logger.info("Node Service Response - " + response);
+            return ResponseEntity.ok(Integer.parseInt(response));
+        } catch (HttpStatusCodeException | ResourceAccessException e) {
+            logger.error("Error calling external service: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    private boolean isNameValid(String name) {
+        // Simple validation to ensure the name does not contain invalid characters
+        return !name.matches("[^a-zA-Z ]+");
     }
 }
