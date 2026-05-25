@@ -45,7 +45,6 @@ public class NumericController {
     @GetMapping(value = "/check", produces = "text/html")
     public String check(@RequestParam(value = "name") String name) {
         return "<html><body><h1>Hello " + name + "</h1></body></html>";
-        
     }
 
     @GetMapping("/compare/{value}")
