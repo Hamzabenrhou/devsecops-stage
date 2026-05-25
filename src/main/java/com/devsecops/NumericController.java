@@ -66,5 +66,6 @@ public class NumericController {
         logger.info("Value Received in Request - " + value);
         logger.info("Node Service Response - " + response);
         return Integer.parseInt(response);
+        
     }
 }
