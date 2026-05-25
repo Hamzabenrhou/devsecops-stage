@@ -12,32 +12,32 @@ pipeline {
     }
 
 
-  stages {
-      stage('Fetch Vault Secret') {
-                  steps {
-                      withVault(
-                          configuration: [
-                              vaultUrl: 'https://104.197.188.180:8200',
-                              vaultCredentialId: 'vault-jenkins-approle',
-                              skipSslVerification: true,
-                              prefixPath: 'secret'  // ← This is the key fix for KV v2 mount
-                          ],
-                          vaultSecrets: [
-                              [
-                                  path: 'jenkins/test',  // relative to prefixPath
-                                  engineVersion: 2,
-                                  secretValues: [
-                                      [vaultKey: 'my-api-key', envVar: 'MY_SECRET']
-                                  ]
-                              ]
-                          ]
-                      ) {
-                          sh '''
-                              echo "Secret from Vault (masked): $MY_SECRET"
-                          '''
-                      }
-                  }
-              }
+   stages {
+//       stage('Fetch Vault Secret') {
+//                   steps {
+//                       withVault(
+//                           configuration: [
+//                               vaultUrl: 'https://104.197.188.180:8200',
+//                               vaultCredentialId: 'vault-jenkins-approle',
+//                               skipSslVerification: true,
+//                               prefixPath: 'secret'  // ← This is the key fix for KV v2 mount
+//                           ],
+//                           vaultSecrets: [
+//                               [
+//                                   path: 'jenkins/test',  // relative to prefixPath
+//                                   engineVersion: 2,
+//                                   secretValues: [
+//                                       [vaultKey: 'my-api-key', envVar: 'MY_SECRET']
+//                                   ]
+//                               ]
+//                           ]
+//                       ) {
+//                           sh '''
+//                               echo "Secret from Vault (masked): $MY_SECRET"
+//                           '''
+//                       }
+//                   }
+//               }
       stage('Build Artifact') {
             steps {
               sh "mvn clean package -DskipTests=true"
@@ -138,11 +138,11 @@ stage('Quality Gate') {
 //
 //                         }
 //                     }
-              stage('Debug Files') {
-                  steps {
-                      sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
-                  }
-              }
+//               stage('Debug Files') {
+//                   steps {
+//                       sh 'pwd && ls -l Dockerfile opa-docker-security.rego || echo "Files missing"'
+//                   }
+//               }
            stage('OPA Conftest docker') {
                steps {
                    sh 'docker pull openpolicyagent/conftest:latest || true'
