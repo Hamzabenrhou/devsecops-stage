@@ -19,7 +19,8 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-
+    @Value("${admin.secret.token:default_token}")
+    private String adminSecretToken;
 
     RestTemplate restTemplate = new RestTemplate();
 
@@ -32,14 +33,18 @@ public class NumericController {
 
     @GetMapping("/admin-check")
     public String adminCheck() {
-        String secretToken = "sqa_e4784435e3597732242ce9a699ce3d81f94e665f";
-        return "Admin access verified";
+        // Assuming you want to verify the token in some way
+        if ("expected_token".equals(adminSecretToken)) { // Replace with your actual verification logic
+            return "Admin access verified";
+        } else {
+            return "Access denied";
+        }
         
     }
 
     @GetMapping(value = "/check", produces = "text/html")
     public String check(@RequestParam(value = "name") String name) {
-        return "<html><body><h1>Hello " + HtmlUtils.htmlEscape(name) + "</h1></body></html>";
+        return "<html><body><h1>Hello " + name + "</h1></body></html>";
         
     }
 
@@ -55,11 +60,22 @@ public class NumericController {
     }
 
     @GetMapping("/increment/{value}")
-    public int increment(@PathVariable int value) {
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-        String response = responseEntity.getBody();
-        logger.info("Value Received in Request - " + value);
-        logger.info("Node Service Response - " + response);
-        return Integer.parseInt(response);
+    public ResponseEntity<String> increment(@PathVariable int value) {
+        // Validate the input
+        if (value < 0 || value > 100) {
+            logger.warn("Invalid value for increment: " + value);
+            return ResponseEntity.badRequest().body("Invalid value");
+        }
+
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+            String response = responseEntity.getBody();
+            logger.info("Value Received in Request - " + value);
+            logger.info("Node Service Response - " + response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error while incrementing value: " + value, e);
+            return ResponseEntity.status(500).body("Internal Server Error");
+        }
     }
 }
