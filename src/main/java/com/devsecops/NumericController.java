@@ -19,8 +19,6 @@ public class NumericController {
     @Value("${baseURL:http://node-pod:5000/plusone}")
     private String baseURL;
 
-
-
     RestTemplate restTemplate = new RestTemplate();
 
     @GetMapping("/")
@@ -55,11 +53,22 @@ public class NumericController {
     }
 
     @GetMapping("/increment/{value}")
-    public int increment(@PathVariable int value) {
-        ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
-        String response = responseEntity.getBody();
-        logger.info("Value Received in Request - " + value);
-        logger.info("Node Service Response - " + response);
-        return Integer.parseInt(response);
+    public ResponseEntity<String> increment(@PathVariable int value) {
+        // Validate the input
+        if (value < 0 || value > 100) {
+            logger.warn("Invalid value for increment: " + value);
+            return ResponseEntity.badRequest().body("Invalid value");
+        }
+
+        try {
+            ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
+            String response = responseEntity.getBody();
+            logger.info("Value Received in Request - " + value);
+            logger.info("Node Service Response - " + response);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            logger.error("Error while incrementing value: " + value, e);
+            return ResponseEntity.status(500).body("Internal Server Error");
+        }
     }
 }
