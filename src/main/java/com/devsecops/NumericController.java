@@ -59,6 +59,7 @@ public class NumericController {
         return message;
     }
 
+    
     @GetMapping("/increment/{value}")
     public int increment(@PathVariable int value) {
         ResponseEntity<String> responseEntity = restTemplate.getForEntity(baseURL + '/' + value, String.class);
